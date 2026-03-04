@@ -20,6 +20,7 @@ interface TemplateData {
   isSupabaseEnabled: boolean
   isMixpanelEnabled: boolean
   isSentryEnabled: boolean
+  isNotionEnabled: boolean
 }
 
 function slugify(text: string): string {
@@ -133,6 +134,11 @@ export async function createPlugin(platform: string) {
           value: 'sentry',
           checked: true,
         },
+        {
+          name: 'Notion (Announcements & Onboarding)',
+          value: 'notion',
+          checked: true,
+        },
       ],
     },
   ])
@@ -206,6 +212,7 @@ export async function createPlugin(platform: string) {
       isSupabaseEnabled: selectedServices.includes('supabase'),
       isMixpanelEnabled: selectedServices.includes('mixpanel'),
       isSentryEnabled: selectedServices.includes('sentry'),
+      isNotionEnabled: selectedServices.includes('notion'),
     }
 
     // Copy template directory excluding node_modules and dist
@@ -247,6 +254,10 @@ export async function createPlugin(platform: string) {
         .replace(
           /isSentryEnabled: true/,
           `isSentryEnabled: ${templateData.isSentryEnabled}`
+        )
+        .replace(
+          /isNotionEnabled: true/,
+          `isNotionEnabled: ${templateData.isNotionEnabled}`
         )
       await fs.writeFile(globalConfigPath, configContent, 'utf-8')
     }
@@ -362,40 +373,27 @@ async function generateEnvFiles(outputDir: string, templateData: TemplateData) {
   const envSentryPath = path.join(outputDir, '.env.sentry-build-plugin')
 
   // Generate .env.local content
-  let envLocalContent = ''
-
-  if (templateData.isSupabaseEnabled) {
-    envLocalContent += `
+  const envLocalContent = `
 # Supabase Configuration
 # Get your keys from: https://supabase.com/dashboard/project/_/settings/api
 VITE_SUPABASE_URL='YOUR_SUPABASE_URL'
 VITE_SUPABASE_PUBLIC_ANON_KEY='YOUR_SUPABASE_ANON_KEY'
 
-`
-  }
-
-  if (templateData.isSentryEnabled) {
-    envLocalContent += `
 # Sentry Configuration
 # Get your DSN from: https://sentry.io/settings/projects/
 VITE_SENTRY_DSN='YOUR_SENTRY_DSN'
 
-`
-  }
-
-  if (templateData.isMixpanelEnabled) {
-    envLocalContent += `
 # Mixpanel Configuration
 # Get your token from: https://mixpanel.com/settings/project/
 VITE_MIXPANEL_TOKEN='YOUR_MIXPANEL_TOKEN'
 
-`
-  }
-
-  // Add common configuration
-  envLocalContent += `
 # Authentication & Workers
 VITE_AUTH_URL='https://auth.${templateData.pluginSlug}.com'
+
+# Workers URLs
+VITE_AUTH_WORKER_URL='https://oauth.yelbolt.workers.dev'
+VITE_CORS_WORKER_URL='https://cors.yelbolt.workers.dev'
+VITE_ANNOUNCEMENTS_WORKER_URL='https://68e83449-announcements.yelbolt.workers.dev/'
 
 # Notion — Content Management (Announcements & Onboarding)
 # Duplicate the databases to your Notion workspace and paste their IDs below
@@ -403,11 +401,6 @@ VITE_AUTH_URL='https://auth.${templateData.pluginSlug}.com'
 VITE_NOTION_ANNOUNCEMENTS_ID='YOUR_ANNOUNCEMENTS_DB_ID'
 VITE_NOTION_ONBOARDING_ID='YOUR_ONBOARDING_DB_ID'
 VITE_NOTION_API_KEY='YOUR_NOTION_API_KEY'
-
-# Workers URLs
-VITE_AUTH_WORKER_URL='https://oauth.yelbolt.workers.dev'
-VITE_ANNOUNCEMENTS_WORKER_URL='https://68e83449-announcements.yelbolt.workers.dev/'
-VITE_CORS_WORKER_URL='https://cors.yelbolt.workers.dev'
 
 # LemonSqueezy (if using payments)
 # You can test with this test license key: 0DE7C002-1F28-49E8-A444-B424F346416E
@@ -421,12 +414,10 @@ VITE_TOLGEE_API_KEY='YOUR_TOLGEE_API_KEY'
 
   await fs.writeFile(envLocalPath, envLocalContent, 'utf-8')
 
-  // Generate .env.sentry-build-plugin only if Sentry is enabled
-  if (templateData.isSentryEnabled) {
-    const envSentryContent = `# Sentry Build Plugin Configuration
+  // Generate .env.sentry-build-plugin
+  const envSentryContent = `# Sentry Build Plugin Configuration
 # Generate your auth token from: https://sentry.io/settings/account/api/auth-tokens/
 SENTRY_AUTH_TOKEN='YOUR_SENTRY_AUTH_TOKEN'
 `
-    await fs.writeFile(envSentryPath, envSentryContent, 'utf-8')
-  }
+  await fs.writeFile(envSentryPath, envSentryContent, 'utf-8')
 }
