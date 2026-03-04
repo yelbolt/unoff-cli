@@ -141,7 +141,7 @@ For detailed usage instructions, see [USAGE.md](./USAGE.md).
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or pull request on [GitHub](https://github.com/yelbolt/@unoff/cli).
+Contributions are welcome! Please open an issue or pull request on [GitHub](https://github.com/yelbolt/unoff-cli).
 
 ## License
 
