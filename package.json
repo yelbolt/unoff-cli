@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "prepare": "git submodule update --init --recursive && npm run build",
+    "prepare": "(git submodule update --init --recursive || true) && npm run build",
     "test": "node --test",
     "format": "npx prettier --write ."
   },
