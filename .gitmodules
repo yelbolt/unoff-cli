@@ -1,0 +1,3 @@
+[submodule "templates/figma"]
+	path = templates/figma
+	url = https://github.com/yelbolt/unoff-template-figma
