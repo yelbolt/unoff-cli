@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-03-04
+
+### Added
+
+- `isNotionEnabled` toggle in the interactive services prompt (Announcements & Onboarding)
+- `isNotionEnabled` flag post-processed in `global.config.ts` alongside the other service flags
+
+### Changed
+
+- `.env.local` is now always fully generated with all vars regardless of selected services — only the flags in `global.config.ts` are toggled
+- `.env.sentry-build-plugin` is now always generated unconditionally
+
 ## [0.1.1] - 2026-03-04
 
 ### Added
@@ -43,5 +55,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🚧 Sketch plugin template (coming soon)
 - 🚧 Framer plugin template (coming soon)
 
+[0.1.2]: https://github.com/yelbolt/unoff-cli/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/yelbolt/unoff-cli/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/yelbolt/unoff-cli/releases/tag/v0.1.0
