@@ -11,11 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `isNotionEnabled` toggle in the interactive services prompt (Announcements & Onboarding)
 - `isNotionEnabled` flag post-processed in `global.config.ts` alongside the other service flags
+- `unoff create` now shows a clear "coming soon" message and exits cleanly for `penpot-plugin`, `sketch-plugin`, and `framer-plugin` instead of attempting scaffold
+- `unoff help` now separates available platforms from coming soon platforms
+- Service list (Supabase, Mixpanel, Sentry, Notion) displayed in `unoff help` under `create`
 
 ### Changed
 
 - `.env.local` is now always fully generated with all vars regardless of selected services — only the flags in `global.config.ts` are toggled
 - `.env.sentry-build-plugin` is now always generated unconditionally
+- README and help output updated to reflect platform availability status
 
 ## [0.1.1] - 2026-03-04
 
