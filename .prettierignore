@@ -1,0 +1,19 @@
+# Templates directory
+templates/
+
+# Build output
+dist/
+node_modules/
+
+# Ignore files
+.gitignore
+.npmignore
+
+# License and documentation files that should not be formatted
+LICENSE
+CHANGELOG.md
+
+# Package lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

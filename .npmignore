@@ -1,0 +1,29 @@
+# Source files
+src/
+tsconfig.json
+
+# Templates source (keep only compiled version)
+templates/**/node_modules/
+templates/**/dist/
+templates/**/.env
+templates/**/.DS_Store
+
+# Development files
+.github/
+*.log
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
