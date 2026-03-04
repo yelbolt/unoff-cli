@@ -1,7 +1,19 @@
 import chalk from 'chalk'
 import { WORKERS, WORKER_SCRIPTS } from './add.js'
 
-const PLATFORMS = ['figma-plugin', 'penpot-plugin', 'sketch-plugin', 'framer-plugin']
+const AVAILABLE_PLATFORMS = ['figma-plugin']
+const COMING_SOON_PLATFORMS = [
+  'penpot-plugin',
+  'sketch-plugin',
+  'framer-plugin',
+]
+
+const SERVICES = [
+  { name: 'supabase', label: 'Supabase   (Database & Authentication)' },
+  { name: 'mixpanel', label: 'Mixpanel   (Analytics)' },
+  { name: 'sentry',   label: 'Sentry     (Error Monitoring)' },
+  { name: 'notion',   label: 'Notion     (Announcements & Onboarding)' },
+]
 
 function row(cmd: string, desc: string) {
   return `  ${chalk.cyan(cmd.padEnd(36))}${chalk.white(desc)}`
@@ -32,7 +44,18 @@ export function showHelp() {
       'Scaffold a new plugin project'
     )
   )
-  console.log(chalk.gray(`  ${''.padEnd(36)}Platforms: ${PLATFORMS.join(', ')}`))
+  console.log(
+    chalk.gray(`  ${''.padEnd(36)}Available: ${AVAILABLE_PLATFORMS.join(', ')}`)
+  )
+  console.log(
+    chalk.gray(
+      `  ${''.padEnd(36)}Coming soon: ${COMING_SOON_PLATFORMS.join(', ')}`
+    )
+  )
+  console.log(chalk.gray(`  ${''.padEnd(36)}Services (toggleable, all enabled by default):`))
+  for (const s of SERVICES) {
+    console.log(chalk.gray(`  ${''.padEnd(38)}· ${s.label}`))
+  }
   console.log()
 
   console.log(chalk.dim('  — Development'))

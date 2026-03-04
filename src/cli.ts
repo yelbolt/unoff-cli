@@ -21,19 +21,24 @@ program
   .command('create <platform>')
   .description('Create a new plugin for a specific platform')
   .action(async (platform: string) => {
-    const validPlatforms = [
-      'figma-plugin',
-      'penpot-plugin',
-      'sketch-plugin',
-      'framer-plugin',
-    ]
+    const availablePlatforms = ['figma-plugin']
+    const comingSoonPlatforms = ['penpot-plugin', 'sketch-plugin', 'framer-plugin']
+    const allPlatforms = [...availablePlatforms, ...comingSoonPlatforms]
 
-    if (!validPlatforms.includes(platform)) {
+    if (!allPlatforms.includes(platform)) {
       console.error(chalk.red(`\n❌ Invalid platform: ${platform}`))
       console.error(
-        chalk.yellow(`\nValid platforms: ${validPlatforms.join(', ')}\n`)
+        chalk.yellow(`\nAvailable platforms: ${availablePlatforms.join(', ')}`)
+      )
+      console.error(
+        chalk.gray(`Coming soon: ${comingSoonPlatforms.join(', ')}\n`)
       )
       process.exit(1)
+    }
+
+    if (comingSoonPlatforms.includes(platform)) {
+      console.error(chalk.yellow(`\n🚧 ${platform} template is coming soon!\n`))
+      process.exit(0)
     }
 
     try {
