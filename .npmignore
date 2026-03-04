@@ -1,6 +1,6 @@
 # Source files
-src/
-tsconfig.json
+/src/
+/tsconfig.json
 
 # Templates source (keep only compiled version)
 templates/**/node_modules/
