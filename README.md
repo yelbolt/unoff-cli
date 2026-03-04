@@ -49,6 +49,17 @@ Show all commands, available platforms, and workers.
 
 Scaffold a new plugin project. Platforms: `figma-plugin`, `penpot-plugin`, `sketch-plugin`, `framer-plugin`.
 
+The interactive prompt will ask for plugin name, output directory, GitHub username, author, license, and which external services to enable:
+
+| Service | Default |
+| ------- | ------- |
+| Supabase (Database & Authentication) | ✅ |
+| Mixpanel (Analytics) | ✅ |
+| Sentry (Error Monitoring) | ✅ |
+| Notion (Announcements & Onboarding) | ✅ |
+
+Selected services update the `is*Enabled` flags in `global.config.ts`. All environment variable placeholders are always generated in `.env.local`.
+
 ```bash
 unoff create figma-plugin
 ```
@@ -99,6 +110,7 @@ unoff remove announcement-worker
 - 📦 Multiple platform support (Figma, Penpot, Sketch, Framer)
 - 🔧 Built-in development server with hot reload
 - 🏗️ Production-ready build system
+- 🎛️ Toggleable external services (Supabase, Mixpanel, Sentry, Notion)
 - 🔐 Authentication scaffolding (Supabase)
 - 💳 License management (LemonSqueezy)
 - 📊 Analytics and monitoring (Mixpanel, Sentry)
