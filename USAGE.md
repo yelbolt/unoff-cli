@@ -5,7 +5,7 @@
 ### Global installation (recommended)
 
 ```bash
-npm install -g create-unoff-plugin
+npm install -g @unoff/cli
 ```
 
 After installation, you can use the `unoff` command anywhere:
@@ -17,7 +17,7 @@ unoff create figma-plugin
 ### Using with npx (no installation)
 
 ```bash
-npx create-unoff-plugin create figma-plugin
+npx @unoff/cli create figma-plugin
 ```
 
 ## Commands
@@ -265,13 +265,13 @@ Before publishing your plugin:
 Make sure you installed the package globally:
 
 ```bash
-npm install -g create-unoff-plugin
+npm install -g @unoff/cli
 ```
 
 Or use npx:
 
 ```bash
-npx create-unoff-plugin create figma-plugin
+npx @unoff/cli create figma-plugin
 ```
 
 ### Template not found
@@ -289,5 +289,5 @@ If the output directory already exists, the CLI will ask if you want to overwrit
 
 For issues or questions:
 
-- GitHub Issues: [create-unoff-plugin/issues](https://github.com/a-ng-d/create-unoff-plugin/issues)
+- GitHub Issues: [unoff-cli/issues](https://github.com/yelbolt/unoff-cli/issues)
 - Documentation: [unoff.dev](https://unoff.dev)

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Initial release of create-unoff-plugin CLI
+- Initial release of @unoff/cli CLI
 - `unoff create` command for creating plugins
 - Support for Figma plugin template
 - Automatic template variable replacement (pluginName, pluginSlug, githubUsername)
@@ -31,4 +31,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🚧 Sketch plugin template (coming soon)
 - 🚧 Framer plugin template (coming soon)
 
-[0.1.0]: https://github.com/your-username/create-unoff-plugin/releases/tag/v0.1.0
+[0.1.0]: https://github.com/yelbolt/unoff-cli/releases/tag/v0.1.0

@@ -62,7 +62,7 @@ export function showHelp() {
 
   console.log(chalk.bold('MORE'))
   console.log(
-    `  ${chalk.gray('Docs & source:')} ${chalk.underline('https://github.com/a-ng-d/create-unoff-plugin')}`
+    `  ${chalk.gray('Docs & source:')} ${chalk.underline('https://github.com/yelbolt/unoff-cli')}`
   )
   console.log()
 }

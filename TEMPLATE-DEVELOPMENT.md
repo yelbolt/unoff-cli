@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document explains how to create and maintain templates for create-unoff-plugin.
+This document explains how to create and maintain templates for unoff-cli.
 
 ## Template Structure
 

@@ -7,20 +7,20 @@ A CLI tool to quickly scaffold plugins for Figma, Penpot, Sketch, and Framer wit
 Install globally:
 
 ```bash
-npm install -g create-unoff-plugin
+npm install -g @unoff/cli
 ```
 
 Or use with npx (no installation required):
 
 ```bash
-npx create-unoff-plugin create figma-plugin
+npx @unoff/cli create figma-plugin
 ```
 
 ## Quick Example
 
 ```bash
 # Install globally
-npm install -g create-unoff-plugin
+npm install -g @unoff/cli
 
 # Create a new Figma plugin (will prompt for name)
 unoff create figma-plugin
@@ -141,7 +141,7 @@ For detailed usage instructions, see [USAGE.md](./USAGE.md).
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or pull request on [GitHub](https://github.com/a-ng-d/create-unoff-plugin).
+Contributions are welcome! Please open an issue or pull request on [GitHub](https://github.com/yelbolt/@unoff/cli).
 
 ## License
 
