@@ -1,5 +1,5 @@
 import chalk from 'chalk'
-import { WORKERS, WORKER_SCRIPTS } from './add.js'
+import { WORKERS, WORKER_SCRIPTS, SKILLS_REPO } from './add.js'
 
 const AVAILABLE_PLATFORMS = ['figma-plugin']
 const COMING_SOON_PLATFORMS = [
@@ -65,22 +65,33 @@ export function showHelp() {
   console.log(row('format', 'Format source code      (npm run format)'))
   console.log()
 
-  console.log(chalk.dim('  — Workers'))
-  console.log(row('add <worker>', 'Add a worker as a git submodule'))
-  console.log(row('remove <worker>', 'Remove a worker submodule'))
-  console.log()
+  console.log(chalk.dim('  — Add'))
+  console.log(row('add worker <name>', 'Add a Cloudflare Worker as a git submodule'))
   console.log(chalk.gray('  Available workers:'))
   for (const name of Object.keys(WORKERS)) {
     console.log(workerRow(name))
   }
+  console.log(row('add skills', 'Add the unoff-skills repo as a git submodule'))
+  console.log(chalk.gray(`  ${''.padEnd(36)}Repo: ${SKILLS_REPO}`))
+  console.log(row('add specs', 'Create a local specs folder with an empty skill template'))
+  console.log()
+
+  console.log(chalk.dim('  — Remove'))
+  console.log(row('remove worker <name>', 'Remove a worker submodule and clean up package.json'))
+  console.log(row('remove skills', 'Remove the skills submodule'))
+  console.log(row('remove specs', 'Remove the local specs folder'))
   console.log()
 
   console.log(chalk.bold('EXAMPLES'))
   console.log()
   console.log(`  ${chalk.gray('$')} unoff create figma-plugin`)
   console.log(`  ${chalk.gray('$')} unoff dev`)
-  console.log(`  ${chalk.gray('$')} unoff add announcement-worker`)
-  console.log(`  ${chalk.gray('$')} unoff remove cors-worker`)
+  console.log(`  ${chalk.gray('$')} unoff add worker announcement`)
+  console.log(`  ${chalk.gray('$')} unoff add skills`)
+  console.log(`  ${chalk.gray('$')} unoff add specs`)
+  console.log(`  ${chalk.gray('$')} unoff remove worker cors`)
+  console.log(`  ${chalk.gray('$')} unoff remove skills`)
+  console.log(`  ${chalk.gray('$')} unoff remove specs`)
   console.log()
 
   console.log(chalk.bold('MORE'))

@@ -4,8 +4,8 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import { createPlugin } from './commands/create.js'
 import { runScript } from './commands/run.js'
-import { addWorker } from './commands/add.js'
-import { removeWorker } from './commands/remove.js'
+import { addWorker, addSkills, addSpecs } from './commands/add.js'
+import { removeWorker, removeSkills, removeSpecs } from './commands/remove.js'
 import { showHelp } from './commands/help.js'
 
 const program = new Command()
@@ -98,26 +98,82 @@ program
     }
   })
 
-program
-  .command('add <worker>')
-  .description('Add a worker as a git submodule')
-  .action(async (worker: string) => {
+const addCmd = program
+  .command('add')
+  .description('Add a worker, skills submodule, or specs folder')
+
+addCmd
+  .command('worker <name>')
+  .description('Add a Cloudflare Worker as a git submodule')
+  .action(async (name: string) => {
     try {
-      await addWorker(worker)
+      await addWorker(name)
     } catch (error) {
       console.error(chalk.red('\n❌ Error adding worker:'), error)
       process.exit(1)
     }
   })
 
-program
-  .command('remove <worker>')
-  .description('Remove a worker submodule and clean up package.json')
-  .action(async (worker: string) => {
+addCmd
+  .command('skills')
+  .description('Add the unoff-skills repo as a git submodule')
+  .action(async () => {
     try {
-      await removeWorker(worker)
+      await addSkills()
+    } catch (error) {
+      console.error(chalk.red('\n❌ Error adding skills:'), error)
+      process.exit(1)
+    }
+  })
+
+addCmd
+  .command('specs')
+  .description('Create a local specs folder with an empty skill template')
+  .action(async () => {
+    try {
+      await addSpecs()
+    } catch (error) {
+      console.error(chalk.red('\n❌ Error adding specs:'), error)
+      process.exit(1)
+    }
+  })
+
+const removeCmd = program
+  .command('remove')
+  .description('Remove a worker, skills submodule, or specs folder')
+
+removeCmd
+  .command('worker <name>')
+  .description('Remove a worker submodule and clean up package.json')
+  .action(async (name: string) => {
+    try {
+      await removeWorker(name)
     } catch (error) {
       console.error(chalk.red('\n❌ Error removing worker:'), error)
+      process.exit(1)
+    }
+  })
+
+removeCmd
+  .command('skills')
+  .description('Remove the skills submodule')
+  .action(async () => {
+    try {
+      await removeSkills()
+    } catch (error) {
+      console.error(chalk.red('\n❌ Error removing skills:'), error)
+      process.exit(1)
+    }
+  })
+
+removeCmd
+  .command('specs')
+  .description('Remove the local specs folder')
+  .action(async () => {
+    try {
+      await removeSpecs()
+    } catch (error) {
+      console.error(chalk.red('\n❌ Error removing specs:'), error)
       process.exit(1)
     }
   })
