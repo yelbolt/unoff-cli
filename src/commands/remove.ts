@@ -4,7 +4,7 @@ import fs from 'fs-extra'
 import chalk from 'chalk'
 import ora from 'ora'
 import inquirer from 'inquirer'
-import { WORKERS, WORKER_SCRIPTS } from './add.js'
+import { WORKERS, WORKER_SCRIPTS, SKILLS_REPO } from './add.js'
 
 const VALID_WORKERS = Object.keys(WORKERS)
 
@@ -158,4 +158,134 @@ function extractSubmodulePath(gitmodulesContent: string, repoUrl: string): strin
     if (pathMatch) return pathMatch[1].trim()
   }
   return null
+}
+
+export async function removeSkills() {
+  // Check if we're inside a git repository
+  let cwd: string
+  try {
+    cwd = process.cwd()
+    execSync('git rev-parse --is-inside-work-tree', { cwd, stdio: 'ignore' })
+  } catch {
+    console.error(
+      chalk.red(
+        '\n❌ Not inside a git repository. Run this command from within your plugin project.\n'
+      )
+    )
+    process.exit(1)
+  }
+
+  const gitmodulesPath = path.join(cwd, '.gitmodules')
+
+  if (!fs.existsSync(gitmodulesPath)) {
+    console.error(
+      chalk.red(`\n❌ No .gitmodules found. Have you added a skills submodule?\n`)
+    )
+    process.exit(1)
+  }
+
+  const gitmodulesContent = await fs.readFile(gitmodulesPath, 'utf-8')
+  if (!gitmodulesContent.includes(SKILLS_REPO)) {
+    console.error(
+      chalk.red(`\n❌ Skills submodule is not registered in .gitmodules.\n`)
+    )
+    process.exit(1)
+  }
+
+  const submodulePath = extractSubmodulePath(gitmodulesContent, SKILLS_REPO)
+  if (!submodulePath) {
+    console.error(
+      chalk.red(`\n❌ Could not determine submodule path for skills.\n`)
+    )
+    process.exit(1)
+  }
+
+  const { confirm } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'confirm',
+      message: `Remove skills submodule at ${chalk.white(submodulePath)}? This cannot be undone.`,
+      default: false,
+    },
+  ])
+
+  if (!confirm) {
+    console.log(chalk.yellow('\n✋ Operation cancelled\n'))
+    process.exit(0)
+  }
+
+  const spinner = ora('Removing skills submodule...').start()
+
+  spawnSync('git', ['submodule', 'deinit', '-f', submodulePath], {
+    cwd,
+    encoding: 'utf-8',
+  })
+
+  const rmResult = spawnSync('git', ['rm', '-f', submodulePath], {
+    cwd,
+    encoding: 'utf-8',
+  })
+
+  if (rmResult.status !== 0) {
+    spinner.fail(chalk.red('Failed to remove skills submodule'))
+    console.error(chalk.red(`\n${rmResult.stderr}\n`))
+    process.exit(1)
+  }
+
+  const gitModulesDir = path.join(cwd, '.git', 'modules', submodulePath)
+  if (fs.existsSync(gitModulesDir)) {
+    await fs.remove(gitModulesDir)
+  }
+
+  spinner.succeed(
+    chalk.green(`Skills submodule removed from ${chalk.white(submodulePath)}`)
+  )
+
+  console.log(chalk.cyan('\n✨ Done!\n'))
+}
+
+export async function removeSpecs() {
+  const cwd = process.cwd()
+
+  const { specsDir } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'specsDir',
+      message: 'Path to the specs folder to remove:',
+      default: 'specs',
+    },
+  ])
+
+  const specsPath = path.resolve(cwd, specsDir)
+
+  if (!fs.existsSync(specsPath)) {
+    console.error(
+      chalk.red(`\n❌ Folder "${specsDir}" does not exist.\n`)
+    )
+    process.exit(1)
+  }
+
+  const { confirm } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'confirm',
+      message: `Remove specs folder ${chalk.white(specsDir)} and all its contents? This cannot be undone.`,
+      default: false,
+    },
+  ])
+
+  if (!confirm) {
+    console.log(chalk.yellow('\n✋ Operation cancelled\n'))
+    process.exit(0)
+  }
+
+  const spinner = ora('Removing specs folder...').start()
+
+  await fs.remove(specsPath)
+
+  spinner.succeed(
+    chalk.green(`Specs folder ${chalk.white(specsDir)} removed`)
+  )
+
+  console.log(chalk.cyan('\n✨ Done!\n'))
 }

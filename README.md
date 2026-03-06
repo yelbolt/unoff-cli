@@ -87,28 +87,63 @@ Run lint and type checking sequentially.
 
 Format source code with Prettier.
 
-### `unoff add <worker>`
+### `unoff add worker <name>`
 
-Add a Cloudflare Worker as a git submodule. Automatically updates `package.json` workspaces and injects the corresponding start script.
+Add a Cloudflare Worker as a git submodule. Automatically updates `package.json` workspaces and injects the corresponding start script. You will be prompted for the destination path.
 
-| Worker                | Script                | Port |
-| --------------------- | --------------------- | ---- |
-| `announcement-worker` | `start:announcements` | 8888 |
-| `auth-worker`         | `start:token`         | 8787 |
-| `cors-worker`         | `start:cors`          | 8989 |
+| Worker          | Script                | Port |
+| --------------- | --------------------- | ---- |
+| `announcement`  | `start:announcements` | 8888 |
+| `auth`          | `start:token`         | 8787 |
+| `cors`          | `start:cors`          | 8989 |
 
 ```bash
-unoff add announcement-worker
+unoff add worker announcement
 npm install
 npm run start:announcements
 ```
 
-### `unoff remove <worker>`
+### `unoff add skills`
+
+Add the [unoff-skills](https://github.com/yelbolt/unoff-skills) repository as a git submodule. You will be prompted for the destination path (default: `skills/`).
+
+```bash
+unoff add skills
+git submodule update --init --recursive
+```
+
+### `unoff add specs`
+
+Create a local `specs/` folder (or any path you choose) with an empty skill template in Markdown. Useful for documenting project-specific conventions in the same format as unoff-skills.
+
+```bash
+unoff add specs
+# prompts for folder path and spec name
+# creates specs/my-spec.md with frontmatter skeleton
+```
+
+### `unoff remove worker <name>`
 
 Remove a worker submodule and clean up `package.json` (workspaces + scripts).
 
 ```bash
-unoff remove announcement-worker
+unoff remove worker announcement
+```
+
+### `unoff remove skills`
+
+Remove the skills submodule from the project.
+
+```bash
+unoff remove skills
+```
+
+### `unoff remove specs`
+
+Remove the local specs folder and all its contents.
+
+```bash
+unoff remove specs
 ```
 
 ## Features
@@ -123,7 +158,9 @@ unoff remove announcement-worker
 - 📊 Analytics and monitoring (Mixpanel, Sentry)
 - 🌍 Internationalization (Tolgee)
 - 📢 Announcement & onboarding system (Notion + Cloudflare Workers)
-- ⚙️ Worker management via git submodules
+- ⚙️ Worker management via git submodules (`add worker` / `remove worker`)
+- 📚 Skills library integration via git submodule (`add skills` / `remove skills`)
+- 📝 Project specs scaffolding (`add specs` / `remove specs`)
 - 📚 Comprehensive AI-assistant documentation
 
 ## What's included in the template?
