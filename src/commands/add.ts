@@ -23,7 +23,7 @@ Brief description.
 Your content here.
 `
 
-function toTitleCase(str: string): string {
+export function toTitleCase(str: string): string {
   return str
     .replace(/-/g, ' ')
     .replace(/\b\w/g, (c) => c.toUpperCase())
