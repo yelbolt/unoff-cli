@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-03-06
+
+### Added
+
+- `unoff add worker <name>` — add a Cloudflare Worker as a git submodule (replaces `unoff add <worker>`)
+- `unoff add skills` — add the [unoff-skills](https://github.com/yelbolt/unoff-skills) repository as a git submodule at a user-chosen path (default: `skills/`)
+- `unoff add specs` — create a local specs folder with an empty skill template (YAML frontmatter + Markdown skeleton) at a user-chosen path (default: `specs/`)
+- `unoff remove worker <name>` — remove a worker submodule and clean up `package.json` (replaces `unoff remove <worker>`)
+- `unoff remove skills` — deinit and remove the skills submodule
+- `unoff remove specs` — remove the local specs folder and all its contents
+- Vitest test suite: 20 tests across 3 files (unit, fs integration, CLI smoke)
+  - `tests/add.test.ts` — validates `WORKERS`, `WORKER_SCRIPTS`, `SKILLS_REPO`, `SPEC_TEMPLATE`, `toTitleCase`
+  - `tests/specs.test.ts` — integration tests for `addSpecs()` and `removeSpecs()` using a real temp directory
+  - `tests/cli.test.ts` — smoke tests spawning the compiled binary
+
+### Changed
+
+- Worker names no longer include the `-worker` suffix: `announcement`, `auth`, `cors`
+- `add` and `remove` are now Commander parent commands with nested subcommands (`worker`, `skills`, `specs`)
+- `help` output reorganised into separate **Add** and **Remove** sections listing all 6 subcommands
+
 ## [0.1.2] - 2026-03-04
 
 ### Added
