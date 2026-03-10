@@ -5,6 +5,7 @@ import ora from 'ora'
 import inquirer from 'inquirer'
 import Mustache from 'mustache'
 import { fileURLToPath } from 'url'
+import { spawnSync } from 'child_process'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -262,7 +263,23 @@ export async function createPlugin(platform: string) {
       await fs.writeFile(globalConfigPath, configContent, 'utf-8')
     }
 
-    spinner.succeed(chalk.green('Plugin created successfully!'))
+    // Initialize git repository
+    const gitCheck = spawnSync('git', ['--version'], { encoding: 'utf-8' })
+    if (gitCheck.status === 0) {
+      const gitInit = spawnSync('git', ['init'], {
+        cwd: outputDir,
+        encoding: 'utf-8',
+      })
+      if (gitInit.status === 0) {
+        spinner.succeed(chalk.green('Plugin created successfully! Git repository initialized.'))
+      } else {
+        spinner.succeed(chalk.green('Plugin created successfully!'))
+        console.warn(chalk.yellow('⚠️  Could not initialize git repository. Run `git init` manually.'))
+      }
+    } else {
+      spinner.succeed(chalk.green('Plugin created successfully!'))
+      console.warn(chalk.yellow('⚠️  git is not available. Run `git init` manually before using `unoff add`.'))
+    }
 
     console.log(chalk.cyan('\n📦 Next steps:\n'))
     console.log(chalk.white(`  cd ${pluginSlug}`))
