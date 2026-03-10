@@ -8,6 +8,82 @@ A CLI tool to quickly scaffold plugins for Figma, Penpot, Sketch, and Framer wit
 - **npm** ≥ 9
 - **git** — required for `unoff create` (initializes a git repository) and for all `unoff add` commands (workers, skills, specs use git submodules)
 
+## Installing Prerequisites
+
+### Homebrew (macOS only)
+
+If you don't have Homebrew installed, open **Terminal** and install it:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Then verify:
+```bash
+brew --version
+```
+
+### Node.js and npm
+
+**On macOS:**
+Open **Terminal** and run:
+```bash
+# Using Homebrew (requires Homebrew to be installed)
+brew install node
+```
+
+**On Windows:**
+1. Download the installer from [nodejs.org](https://nodejs.org)
+2. Run the installer and follow the setup wizard
+3. Open **Command Prompt** (cmd.exe) or **PowerShell** and verify installation:
+   ```bash
+   node --version
+   npm --version
+   ```
+
+**On Linux (Ubuntu/Debian):**
+Open **Terminal** and run:
+```bash
+sudo apt update
+sudo apt install nodejs npm
+```
+
+**On Linux (Fedora/CentOS):**
+Open **Terminal** and run:
+```bash
+sudo dnf install nodejs npm
+```
+
+### Git
+
+**On macOS:**
+Open **Terminal** and run:
+```bash
+# Using Homebrew
+brew install git
+```
+
+**On Windows:**
+1. Download the installer from [git-scm.com](https://git-scm.com)
+2. Run the installer and follow the setup wizard
+3. Open **Command Prompt** (cmd.exe) or **PowerShell** and verify installation:
+   ```bash
+   git --version
+   ```
+
+**On Linux (Ubuntu/Debian):**
+Open **Terminal** and run:
+```bash
+sudo apt update
+sudo apt install git
+```
+
+**On Linux (Fedora/CentOS):**
+Open **Terminal** and run:
+```bash
+sudo dnf install git
+```
+
 ## Installation
 
 Install globally:
