@@ -2,6 +2,12 @@
 
 A CLI tool to quickly scaffold plugins for Figma, Penpot, Sketch, and Framer with built-in development tools and best practices.
 
+## Prerequisites
+
+- **Node.js** ≥ 18
+- **npm** ≥ 9
+- **git** — required for `unoff create` (initializes a git repository) and for all `unoff add` commands (workers, skills, specs use git submodules)
+
 ## Installation
 
 Install globally:
