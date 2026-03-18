@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2026-03-18
+
+### Changed
+
+- Figma plugin template (`unoff-template-figma`): `@unoff/ui` bumped to **1.23.0**
+- Figma plugin template: package dependencies and overrides updated for compatibility
+
+### Skills (`unoff-skills`)
+
+- `component-library` skill: added **`SegmentedControl`** — props, usage, and reading the active segment from `data-feature`
+- `component-library` skill: added **`ActionsList`** — low-level option list used internally by `Dropdown` and `Menu`, with standalone usage docs
+- `component-library` skill: documented search props (`canBeSearched`, `searchLabel`, `noResultsLabel`) on `Dropdown`, `Menu`, and `ActionsList`
+- `component-library` skill: expanded `Dropdown` and `Menu` props (`alignment`, `preview`, `warning`, `shouldReflow`, `isDisabled`, `onUnblock`, `customIcon`, `helper`)
+- `component-library` skill: corrected `Menu` `type` values to `"ICON"` | `"PRIMARY"` (was `"PRIMARY"` | `"SECONDARY"`)
+- `component-mapping` skill: `SegmentedControl` added to the Figma → `@unoff/ui` mapping table; `Knob` entry refined
+
 ## [0.1.4] - 2026-03-10
 
 ### Added
@@ -87,6 +103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🚧 Sketch plugin template (coming soon)
 - 🚧 Framer plugin template (coming soon)
 
+[0.1.5]: https://github.com/yelbolt/unoff-cli/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/yelbolt/unoff-cli/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/yelbolt/unoff-cli/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/yelbolt/unoff-cli/compare/v0.1.1...v0.1.2
