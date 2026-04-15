@@ -227,7 +227,7 @@ export async function addSkills() {
       type: 'input',
       name: 'submodulePath',
       message: 'Where do you want to add the skills submodule?',
-      default: 'skills',
+      default: '.claude/skills/unoff-create-skills',
     },
   ])
 
