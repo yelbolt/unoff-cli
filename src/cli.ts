@@ -15,14 +15,14 @@ program
   .description(
     'CLI tool to create plugins for Figma, Penpot, Sketch, and Framer'
   )
-  .version('0.1.0')
+  .version('0.2.0')
 
 program
   .command('create <platform>')
   .description('Create a new plugin for a specific platform')
   .action(async (platform: string) => {
-    const availablePlatforms = ['figma-plugin']
-    const comingSoonPlatforms = ['penpot-plugin', 'sketch-plugin', 'framer-plugin']
+    const availablePlatforms = ['figma-plugin', 'penpot-plugin']
+    const comingSoonPlatforms = ['sketch-plugin', 'framer-plugin']
     const allPlatforms = [...availablePlatforms, ...comingSoonPlatforms]
 
     if (!allPlatforms.includes(platform)) {

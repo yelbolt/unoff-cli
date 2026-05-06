@@ -19,6 +19,7 @@ If you don't have Homebrew installed, open **Terminal** and install it:
 ```
 
 Then verify:
+
 ```bash
 brew --version
 ```
@@ -27,12 +28,14 @@ brew --version
 
 **On macOS:**
 Open **Terminal** and run:
+
 ```bash
 # Using Homebrew (requires Homebrew to be installed)
 brew install node
 ```
 
 **On Windows:**
+
 1. Download the installer from [nodejs.org](https://nodejs.org)
 2. Run the installer and follow the setup wizard
 3. Open **Command Prompt** (cmd.exe) or **PowerShell** and verify installation:
@@ -43,6 +46,7 @@ brew install node
 
 **On Linux (Ubuntu/Debian):**
 Open **Terminal** and run:
+
 ```bash
 sudo apt update
 sudo apt install nodejs npm
@@ -50,6 +54,7 @@ sudo apt install nodejs npm
 
 **On Linux (Fedora/CentOS):**
 Open **Terminal** and run:
+
 ```bash
 sudo dnf install nodejs npm
 ```
@@ -58,12 +63,14 @@ sudo dnf install nodejs npm
 
 **On macOS:**
 Open **Terminal** and run:
+
 ```bash
 # Using Homebrew
 brew install git
 ```
 
 **On Windows:**
+
 1. Download the installer from [git-scm.com](https://git-scm.com)
 2. Run the installer and follow the setup wizard
 3. Open **Command Prompt** (cmd.exe) or **PowerShell** and verify installation:
@@ -73,6 +80,7 @@ brew install git
 
 **On Linux (Ubuntu/Debian):**
 Open **Terminal** and run:
+
 ```bash
 sudo apt update
 sudo apt install git
@@ -80,6 +88,7 @@ sudo apt install git
 
 **On Linux (Fedora/CentOS):**
 Open **Terminal** and run:
+
 ```bash
 sudo dnf install git
 ```
@@ -107,8 +116,11 @@ npm install -g @unoff/cli
 # Create a new Figma plugin (will prompt for name)
 unoff create figma-plugin
 
+# Or create a Penpot plugin
+unoff create penpot-plugin
+
 # Navigate to the plugin directory
-cd color-palette-generator
+cd my-plugin
 
 # Install dependencies
 npm install
@@ -116,9 +128,8 @@ npm install
 # Start development
 unoff dev
 
-# Open Figma and load the plugin:
-# Plugins > Development > Import plugin from manifest...
-# Select manifest.json from the plugin folder
+# Figma: Plugins > Development > Import plugin from manifest...
+# Penpot: Plugins > Add custom plugin > http://localhost:4400/manifest.json
 ```
 
 ## CLI Commands
@@ -131,21 +142,21 @@ Show all commands, available platforms, and workers.
 
 Scaffold a new plugin project.
 
-| Platform | Status |
-| -------- | ------ |
-| `figma-plugin` | ✅ Available |
-| `penpot-plugin` | 🚧 Coming soon |
+| Platform        | Status         |
+| --------------- | -------------- |
+| `figma-plugin`  | ✅ Available   |
+| `penpot-plugin` | ✅ Available   |
 | `sketch-plugin` | 🚧 Coming soon |
 | `framer-plugin` | 🚧 Coming soon |
 
 The interactive prompt will ask for plugin name, output directory, GitHub username, author, license, and which external services to enable:
 
-| Service | Default |
-| ------- | ------- |
-| Supabase (Database & Authentication) | ✅ |
-| Mixpanel (Analytics) | ✅ |
-| Sentry (Error Monitoring) | ✅ |
-| Notion (Announcements & Onboarding) | ✅ |
+| Service                              | Default |
+| ------------------------------------ | ------- |
+| Supabase (Database & Authentication) | ✅      |
+| Mixpanel (Analytics)                 | ✅      |
+| Sentry (Error Monitoring)            | ✅      |
+| Notion (Announcements & Onboarding)  | ✅      |
 
 Selected services update the `is*Enabled` flags in `global.config.ts`. All environment variable placeholders are always generated in `.env.local`.
 
@@ -173,11 +184,11 @@ Format source code with Prettier.
 
 Add a Cloudflare Worker as a git submodule. Automatically updates `package.json` workspaces and injects the corresponding start script. You will be prompted for the destination path.
 
-| Worker          | Script                | Port |
-| --------------- | --------------------- | ---- |
-| `announcement`  | `start:announcements` | 8888 |
-| `auth`          | `start:token`         | 8787 |
-| `cors`          | `start:cors`          | 8989 |
+| Worker         | Script                | Port |
+| -------------- | --------------------- | ---- |
+| `announcement` | `start:announcements` | 8888 |
+| `auth`         | `start:token`         | 8787 |
+| `cors`         | `start:cors`          | 8989 |
 
 ```bash
 unoff add worker announcement
@@ -231,7 +242,7 @@ unoff remove specs
 ## Features
 
 - 🚀 Quick setup with interactive CLI
-- 📦 Multiple platform support (Figma ✅, Penpot 🚧, Sketch 🚧, Framer 🚧)
+- 📦 Multiple platform support (Figma ✅, Penpot ✅, Sketch 🚧, Framer 🚧)
 - 🔧 Built-in development server with hot reload
 - 🏗️ Production-ready build system
 - 🎛️ Toggleable external services (Supabase, Mixpanel, Sentry, Notion)

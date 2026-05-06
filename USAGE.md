@@ -105,11 +105,11 @@ Add a Cloudflare Worker as a git submodule, register it in `package.json` worksp
 
 **Available workers:**
 
-| Worker | Script added | Port |
-|---|---|---|
+| Worker                | Script added          | Port |
+| --------------------- | --------------------- | ---- |
 | `announcement-worker` | `start:announcements` | 8888 |
-| `auth-worker` | `start:token` | 8787 |
-| `cors-worker` | `start:cors` | 8989 |
+| `auth-worker`         | `start:token`         | 8787 |
+| `cors-worker`         | `start:cors`          | 8989 |
 
 **Examples:**
 
@@ -142,6 +142,7 @@ unoff remove announcement-worker
 ```
 
 This command:
+
 1. Looks up the submodule path from `.gitmodules`
 2. Asks for confirmation
 3. Runs `git submodule deinit` + `git rm`

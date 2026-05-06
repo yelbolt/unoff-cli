@@ -271,14 +271,26 @@ export async function createPlugin(platform: string) {
         encoding: 'utf-8',
       })
       if (gitInit.status === 0) {
-        spinner.succeed(chalk.green('Plugin created successfully! Git repository initialized.'))
+        spinner.succeed(
+          chalk.green(
+            'Plugin created successfully! Git repository initialized.'
+          )
+        )
       } else {
         spinner.succeed(chalk.green('Plugin created successfully!'))
-        console.warn(chalk.yellow('⚠️  Could not initialize git repository. Run `git init` manually.'))
+        console.warn(
+          chalk.yellow(
+            '⚠️  Could not initialize git repository. Run `git init` manually.'
+          )
+        )
       }
     } else {
       spinner.succeed(chalk.green('Plugin created successfully!'))
-      console.warn(chalk.yellow('⚠️  git is not available. Run `git init` manually before using `unoff add`.'))
+      console.warn(
+        chalk.yellow(
+          '⚠️  git is not available. Run `git init` manually before using `unoff add`.'
+        )
+      )
     }
 
     console.log(chalk.cyan('\n📦 Next steps:\n'))
@@ -434,6 +446,8 @@ VITE_TOLGEE_API_KEY='YOUR_TOLGEE_API_KEY'
   // Generate .env.sentry-build-plugin
   const envSentryContent = `# Sentry Build Plugin Configuration
 # Generate your auth token from: https://sentry.io/settings/account/api/auth-tokens/
+SENTRY_ORG='YOUR_SENTRY_ORG'
+SENTRY_PROJECT='YOUR_SENTRY_PROJECT'
 SENTRY_AUTH_TOKEN='YOUR_SENTRY_AUTH_TOKEN'
 `
   await fs.writeFile(envSentryPath, envSentryContent, 'utf-8')

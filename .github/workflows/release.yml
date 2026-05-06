@@ -53,7 +53,7 @@ jobs:
         run: |
           VERSION="${{ steps.package_version.outputs.version }}"
           echo "Extracting release notes for version $VERSION from CHANGELOG.md"
-          
+
           if [ ! -f CHANGELOG.md ]; then
             echo "CHANGELOG.md not found, using PR information"
             echo "## Changes" > release_notes.md
@@ -119,12 +119,12 @@ jobs:
               fi
             fi
           fi
-          
+
           echo "Generated release notes:"
           echo "========================"
           cat release_notes.md
           echo "========================"
-          
+
           # Set output for GitHub Actions
           echo "notes<<EOF" >> $GITHUB_OUTPUT
           cat release_notes.md >> $GITHUB_OUTPUT
