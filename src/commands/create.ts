@@ -434,6 +434,8 @@ VITE_TOLGEE_API_KEY='YOUR_TOLGEE_API_KEY'
   // Generate .env.sentry-build-plugin
   const envSentryContent = `# Sentry Build Plugin Configuration
 # Generate your auth token from: https://sentry.io/settings/account/api/auth-tokens/
+SENTRY_ORG='YOUR_SENTRY_ORG'
+SENTRY_PROJECT='YOUR_SENTRY_PROJECT'
 SENTRY_AUTH_TOKEN='YOUR_SENTRY_AUTH_TOKEN'
 `
   await fs.writeFile(envSentryPath, envSentryContent, 'utf-8')
