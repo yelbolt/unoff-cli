@@ -116,8 +116,11 @@ npm install -g @unoff/cli
 # Create a new Figma plugin (will prompt for name)
 unoff create figma-plugin
 
+# Or create a Penpot plugin
+unoff create penpot-plugin
+
 # Navigate to the plugin directory
-cd color-palette-generator
+cd my-plugin
 
 # Install dependencies
 npm install
@@ -125,9 +128,8 @@ npm install
 # Start development
 unoff dev
 
-# Open Figma and load the plugin:
-# Plugins > Development > Import plugin from manifest...
-# Select manifest.json from the plugin folder
+# Figma: Plugins > Development > Import plugin from manifest...
+# Penpot: Plugins > Add custom plugin > http://localhost:4400/manifest.json
 ```
 
 ## CLI Commands
@@ -143,7 +145,7 @@ Scaffold a new plugin project.
 | Platform        | Status         |
 | --------------- | -------------- |
 | `figma-plugin`  | ✅ Available   |
-| `penpot-plugin` | 🚧 Coming soon |
+| `penpot-plugin` | ✅ Available   |
 | `sketch-plugin` | 🚧 Coming soon |
 | `framer-plugin` | 🚧 Coming soon |
 
@@ -240,7 +242,7 @@ unoff remove specs
 ## Features
 
 - 🚀 Quick setup with interactive CLI
-- 📦 Multiple platform support (Figma ✅, Penpot 🚧, Sketch 🚧, Framer 🚧)
+- 📦 Multiple platform support (Figma ✅, Penpot ✅, Sketch 🚧, Framer 🚧)
 - 🔧 Built-in development server with hot reload
 - 🏗️ Production-ready build system
 - 🎛️ Toggleable external services (Supabase, Mixpanel, Sentry, Notion)

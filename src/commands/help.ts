@@ -1,12 +1,8 @@
 import chalk from 'chalk'
 import { WORKERS, WORKER_SCRIPTS, SKILLS_REPO } from './add.js'
 
-const AVAILABLE_PLATFORMS = ['figma-plugin']
-const COMING_SOON_PLATFORMS = [
-  'penpot-plugin',
-  'sketch-plugin',
-  'framer-plugin',
-]
+const AVAILABLE_PLATFORMS = ['figma-plugin', 'penpot-plugin']
+const COMING_SOON_PLATFORMS = ['sketch-plugin', 'framer-plugin']
 
 const SERVICES = [
   { name: 'supabase', label: 'Supabase   (Database & Authentication)' },
@@ -101,6 +97,7 @@ export function showHelp() {
   console.log(chalk.bold('EXAMPLES'))
   console.log()
   console.log(`  ${chalk.gray('$')} unoff create figma-plugin`)
+  console.log(`  ${chalk.gray('$')} unoff create penpot-plugin`)
   console.log(`  ${chalk.gray('$')} unoff dev`)
   console.log(`  ${chalk.gray('$')} unoff add worker announcement`)
   console.log(`  ${chalk.gray('$')} unoff add skills`)
