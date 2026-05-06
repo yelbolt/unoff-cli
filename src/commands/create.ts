@@ -271,14 +271,26 @@ export async function createPlugin(platform: string) {
         encoding: 'utf-8',
       })
       if (gitInit.status === 0) {
-        spinner.succeed(chalk.green('Plugin created successfully! Git repository initialized.'))
+        spinner.succeed(
+          chalk.green(
+            'Plugin created successfully! Git repository initialized.'
+          )
+        )
       } else {
         spinner.succeed(chalk.green('Plugin created successfully!'))
-        console.warn(chalk.yellow('⚠️  Could not initialize git repository. Run `git init` manually.'))
+        console.warn(
+          chalk.yellow(
+            '⚠️  Could not initialize git repository. Run `git init` manually.'
+          )
+        )
       }
     } else {
       spinner.succeed(chalk.green('Plugin created successfully!'))
-      console.warn(chalk.yellow('⚠️  git is not available. Run `git init` manually before using `unoff add`.'))
+      console.warn(
+        chalk.yellow(
+          '⚠️  git is not available. Run `git init` manually before using `unoff add`.'
+        )
+      )
     }
 
     console.log(chalk.cyan('\n📦 Next steps:\n'))

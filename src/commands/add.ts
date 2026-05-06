@@ -24,26 +24,23 @@ Your content here.
 `
 
 export function toTitleCase(str: string): string {
-  return str
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
+  return str.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
 export const WORKERS: Record<string, string> = {
-  'announcement':
-    'https://github.com/a-ng-d/announcements-yelbolt-worker',
-  'auth': 'https://github.com/a-ng-d/auth-yelbolt-worker',
-  'cors': 'https://github.com/a-ng-d/cors-yelbolt-worker',
+  announcement: 'https://github.com/a-ng-d/announcements-yelbolt-worker',
+  auth: 'https://github.com/a-ng-d/auth-yelbolt-worker',
+  cors: 'https://github.com/a-ng-d/cors-yelbolt-worker',
 }
 
 export const WORKER_SCRIPTS: Record<string, Record<string, string>> = {
-  'announcement': {
+  announcement: {
     'start:announcements': 'npm run start:8888 -w announcements-yelbolt-worker',
   },
-  'auth': {
+  auth: {
     'start:token': 'npm run start:8787 -w auth-yelbolt-worker',
   },
-  'cors': {
+  cors: {
     'start:cors': 'npm run start:8989 -w cors-yelbolt-worker',
   },
 }
@@ -326,7 +323,10 @@ export async function addSpecs() {
   const spinner = ora('Creating spec...').start()
 
   await fs.ensureDir(specsPath)
-  await fs.writeFile(specFilePath, SPEC_TEMPLATE(specName, toTitleCase(specName)))
+  await fs.writeFile(
+    specFilePath,
+    SPEC_TEMPLATE(specName, toTitleCase(specName))
+  )
 
   spinner.succeed(
     chalk.green(

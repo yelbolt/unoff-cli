@@ -12,7 +12,9 @@ import inquirer from 'inquirer'
 import { addSpecs } from '../src/commands/add.js'
 import { removeSpecs } from '../src/commands/remove.js'
 
-const mockPrompt = vi.mocked(inquirer.prompt as (...args: unknown[]) => Promise<unknown>)
+const mockPrompt = vi.mocked(
+  inquirer.prompt as (...args: unknown[]) => Promise<unknown>
+)
 
 // Sentinel error to distinguish process.exit calls from real errors
 class ProcessExitError extends Error {
@@ -60,7 +62,13 @@ describe('addSpecs()', () => {
 
     await addSpecs()
 
-    const filePath = path.join(tmpDir, 'deep', 'nested', 'specs', 'test-spec.md')
+    const filePath = path.join(
+      tmpDir,
+      'deep',
+      'nested',
+      'specs',
+      'test-spec.md'
+    )
     expect(fs.existsSync(filePath)).toBe(true)
   })
 

@@ -48,7 +48,9 @@ export async function removeWorker(workerName: string) {
   const gitmodulesContent = await fs.readFile(gitmodulesPath, 'utf-8')
   if (!gitmodulesContent.includes(repoUrl)) {
     console.error(
-      chalk.red(`\n❌ Worker "${workerName}" is not registered as a submodule.\n`)
+      chalk.red(
+        `\n❌ Worker "${workerName}" is not registered as a submodule.\n`
+      )
     )
     process.exit(1)
   }
@@ -57,7 +59,9 @@ export async function removeWorker(workerName: string) {
   const submodulePath = extractSubmodulePath(gitmodulesContent, repoUrl)
   if (!submodulePath) {
     console.error(
-      chalk.red(`\n❌ Could not determine submodule path for "${workerName}".\n`)
+      chalk.red(
+        `\n❌ Could not determine submodule path for "${workerName}".\n`
+      )
     )
     process.exit(1)
   }
@@ -103,7 +107,9 @@ export async function removeWorker(workerName: string) {
   }
 
   spinner.succeed(
-    chalk.green(`Submodule ${chalk.cyan(workerName)} removed from ${chalk.white(submodulePath)}`)
+    chalk.green(
+      `Submodule ${chalk.cyan(workerName)} removed from ${chalk.white(submodulePath)}`
+    )
   )
 
   // Update package.json: workspaces + scripts
@@ -149,7 +155,10 @@ export async function removeWorker(workerName: string) {
   console.log(chalk.cyan('\n✨ Done!\n'))
 }
 
-function extractSubmodulePath(gitmodulesContent: string, repoUrl: string): string | null {
+function extractSubmodulePath(
+  gitmodulesContent: string,
+  repoUrl: string
+): string | null {
   // Parse .gitmodules to find the path for a given URL
   const blocks = gitmodulesContent.split(/\[submodule\s+/)
   for (const block of blocks) {
@@ -179,7 +188,9 @@ export async function removeSkills() {
 
   if (!fs.existsSync(gitmodulesPath)) {
     console.error(
-      chalk.red(`\n❌ No .gitmodules found. Have you added a skills submodule?\n`)
+      chalk.red(
+        `\n❌ No .gitmodules found. Have you added a skills submodule?\n`
+      )
     )
     process.exit(1)
   }
@@ -259,9 +270,7 @@ export async function removeSpecs() {
   const specsPath = path.resolve(cwd, specsDir)
 
   if (!fs.existsSync(specsPath)) {
-    console.error(
-      chalk.red(`\n❌ Folder "${specsDir}" does not exist.\n`)
-    )
+    console.error(chalk.red(`\n❌ Folder "${specsDir}" does not exist.\n`))
     process.exit(1)
   }
 
@@ -283,9 +292,7 @@ export async function removeSpecs() {
 
   await fs.remove(specsPath)
 
-  spinner.succeed(
-    chalk.green(`Specs folder ${chalk.white(specsDir)} removed`)
-  )
+  spinner.succeed(chalk.green(`Specs folder ${chalk.white(specsDir)} removed`))
 
   console.log(chalk.cyan('\n✨ Done!\n'))
 }
