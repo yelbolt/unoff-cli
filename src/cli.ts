@@ -15,7 +15,7 @@ program
   .description(
     'CLI tool to create plugins for Figma, Penpot, Sketch, and Framer'
   )
-  .version('0.1.0')
+  .version('0.2.0')
 
 program
   .command('create <platform>')
