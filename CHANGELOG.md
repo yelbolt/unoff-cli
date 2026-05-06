@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-05-06
+
+### Added
+
+- `unoff create penpot-plugin` — scaffold a Penpot plugin using the new `unoff-template-penpot` submodule
+- Penpot plugin template (`unoff-template-penpot`) wired as a git submodule (`templates/penpot`)
+
+### Changed
+
+- `penpot-plugin` moved from "coming soon" to available in `create` command, `unoff help`, and README
+- Quick Example in README extended with Penpot workflow and plugin loading instructions
+
+### Fixed
+
+- `penpot.ui.onMessage` was incorrectly assigned as a property; corrected to a method call `penpot.ui.onMessage(callback)` — resolves *"Cannot assign to read only property"* error introduced in Penpot 2.15+
+
+### Skills (`unoff-skills`)
+
+- Bridge and Canvas skill layers restructured into platform subdirectories:
+  - `bridge/figma/` + `bridge/penpot/` — communication pattern and bridge functions per platform
+  - `canvas/figma/` + `canvas/penpot/` — API, storage, and document generation per platform
+- `app-bootstrap` skill updated with separate Figma and Penpot Canvas initialization sections
+- `implement-design` skill extended with the Penpot MCP workflow (code-execution model via `@penpot/mcp`, selection-based, no URL parsing)
+- Platform-specific annotations added to `app-bootstrap`, `error-handling`, `css-theming`, `i18n`, `state-management`, `payment-systems`, `types-system`, `credits-system`
+- `SKILL.md` index updated to reflect the platform-split structure and improve agent routing
+
+### Templates (Figma + Penpot)
+
+- All AI tool rule files (CLAUDE.md, `.cursor/rules/project.mdc`, `.windsurf/rules/project.md`, `.github/copilot-instructions.md`) updated with new skill paths
+- Penpot template: all Figma identity references corrected to Penpot (developer role, API calls, communication examples)
+- Section comments added to all bridge files across both templates:
+  - `loadUI.ts` — Startup / Announcements / Preferences / Storage / Browser / Plans / Auth
+  - `checkCredits.ts` — 4 storage cases documented inline
+  - `checkTrialStatus.ts` — storage reads, trial status, plan status, send result
+  - `checkAnnouncementsStatus.ts` — storage reads, version comparison
+  - Short files (`checkUserLicense`, `checkUserPreferences`, `checkEditor`, `enableTrial`, `payProPlan`) — descriptive header comment
+
 ## [0.1.5] - 2026-03-18
 
 ### Changed
@@ -103,6 +140,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🚧 Sketch plugin template (coming soon)
 - 🚧 Framer plugin template (coming soon)
 
+[0.2.0]: https://github.com/yelbolt/unoff-cli/compare/v0.1.5...v0.2.0
 [0.1.5]: https://github.com/yelbolt/unoff-cli/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/yelbolt/unoff-cli/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/yelbolt/unoff-cli/compare/v0.1.2...v0.1.3
