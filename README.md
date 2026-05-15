@@ -95,29 +95,33 @@ sudo dnf install git
 
 ## Installation
 
-Install globally:
+A global install is recommended — it makes every `unoff` command available directly in any plugin project:
 
 ```bash
 npm install -g @unoff/cli
 ```
 
-Or use with npx (no installation required):
+If you prefer not to install globally, every command works with `npx @unoff/cli` as a drop-in replacement:
 
 ```bash
+# Instead of: unoff create figma-plugin
 npx @unoff/cli create figma-plugin
+
+# Instead of: unoff dev
+npx @unoff/cli dev
+
+# Instead of: unoff build
+npx @unoff/cli build
 ```
 
 ## Quick Example
 
 ```bash
-# Install globally
-npm install -g @unoff/cli
-
-# Create a new Figma plugin (will prompt for name)
+# Scaffold a plugin (global install)
 unoff create figma-plugin
 
-# Or create a Penpot plugin
-unoff create penpot-plugin
+# Or without global install
+npx @unoff/cli create figma-plugin
 
 # Navigate to the plugin directory
 cd my-plugin
@@ -125,7 +129,7 @@ cd my-plugin
 # Install dependencies
 npm install
 
-# Start development
+# Start development (or: npx @unoff/cli dev)
 unoff dev
 
 # Figma: Plugins > Development > Import plugin from manifest...
@@ -140,7 +144,7 @@ Show all commands, available platforms, and workers.
 
 ### `unoff create <platform>`
 
-Scaffold a new plugin project.
+Scaffold a new plugin project with an interactive prompt.
 
 | Platform        | Status         |
 | --------------- | -------------- |
@@ -159,10 +163,6 @@ The interactive prompt will ask for plugin name, output directory, GitHub userna
 | Notion (Announcements & Onboarding)  | ✅      |
 
 Selected services update the `is*Enabled` flags in `global.config.ts`. All environment variable placeholders are always generated in `.env.local`.
-
-```bash
-unoff create figma-plugin
-```
 
 ### `unoff dev`
 

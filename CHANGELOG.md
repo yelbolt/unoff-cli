@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-05-15
+
+### Fixed
+
+- `start:dev` race condition: replaced `&` with `&&` in both Figma and Penpot templates — `vite preview` no longer starts before `dist/` exists
+- `react/react-in-jsx-scope` ESLint error: added `plugin:react/jsx-runtime` to all `.eslintrc.json` configs, making the bare `import React from 'react'` unnecessary with the automatic JSX transform
+
+### Changed
+
+- Templates (Figma + Penpot): migrated to Preact-native JSX transform
+  - `tsconfig.json`: `"jsx": "react"` → `"jsx": "react-jsx"` + `"jsxImportSource": "preact"` — TypeScript uses Preact's JSX types, eliminating the `@types/react` / Preact collision
+  - `package.json`: removed `@types/react`, `@types/react-dom`, `@vitejs/plugin-react`, `@vitejs/plugin-react-swc` from devDependencies
+  - Bare `import React from 'react'` removed from all files that only used it for JSX (automatic runtime handles it)
+  - `ConfigContext.tsx`, `ThemeContext.tsx`: migrated to `createContext` / `useContext` / `useEffect` from `preact` and `preact/hooks`; `ReactNode` replaced with `ComponentChildren`
+  - `WithTranslation.tsx`: `import type { ComponentType } from 'preact'`
+  - `PlanControls.tsx`, `Feature.tsx`: `PureComponent` from `preact/compat`, `React.ReactNode` → `ComponentChildren`
+  - Files using `React.Dispatch`, `React.ChangeEventHandler`, `React.MouseEvent` as type namespaces keep `import React from 'react'` — now resolved via `preact/compat`, no collision
+- `start:dev` split into two composable scripts: `"build"` (watch) + `"preview"` (`vite preview`), launched together via `npm run build & npm run preview`
+- README: installation section restructured — global install recommended, `npx @unoff/cli` documented as a drop-in alternative for all commands
+
+### Templates (Figma + Penpot)
+
+- Applied all changes above to both CLI scaffolding templates (`templates/figma`, `templates/penpot`) and standalone template repos (`unoff-template-figma`, `unoff-template-penpot`)
+
 ## [0.2.0] - 2026-05-06
 
 ### Added
@@ -140,6 +164,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🚧 Sketch plugin template (coming soon)
 - 🚧 Framer plugin template (coming soon)
 
+[0.2.1]: https://github.com/yelbolt/unoff-cli/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/yelbolt/unoff-cli/compare/v0.1.5...v0.2.0
 [0.1.5]: https://github.com/yelbolt/unoff-cli/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/yelbolt/unoff-cli/compare/v0.1.3...v0.1.4

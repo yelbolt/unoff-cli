@@ -40,7 +40,7 @@ export function showHelp() {
   console.log()
 
   console.log(chalk.dim('  — Project'))
-  console.log(row(`create <platform>`, 'Scaffold a new plugin project'))
+  console.log(row('create <platform>', 'Scaffold a new plugin project'))
   console.log(
     chalk.gray(`  ${''.padEnd(36)}Available: ${AVAILABLE_PLATFORMS.join(', ')}`)
   )
