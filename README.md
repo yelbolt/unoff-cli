@@ -104,8 +104,8 @@ npm install -g @unoff/cli
 If you prefer not to install globally, every command works with `npx @unoff/cli` as a drop-in replacement:
 
 ```bash
-# Instead of: unoff create-figma-plugin
-npx @unoff/cli create-figma-plugin
+# Instead of: unoff create figma-plugin
+npx @unoff/cli create figma-plugin
 
 # Instead of: unoff dev
 npx @unoff/cli dev
@@ -118,10 +118,10 @@ npx @unoff/cli build
 
 ```bash
 # Scaffold a plugin (global install)
-unoff create-figma-plugin
+unoff create figma-plugin
 
 # Or without global install
-npx @unoff/cli create-figma-plugin
+npx @unoff/cli create figma-plugin
 
 # Navigate to the plugin directory
 cd my-plugin
@@ -142,16 +142,16 @@ unoff dev
 
 Show all commands, available platforms, and workers.
 
-### `unoff create-figma-plugin` / `unoff create-penpot-plugin`
+### `unoff create <platform>`
 
 Scaffold a new plugin project with an interactive prompt.
 
-| Command                      | Status         |
-| ---------------------------- | -------------- |
-| `unoff create-figma-plugin`  | ✅ Available   |
-| `unoff create-penpot-plugin` | ✅ Available   |
-| `unoff create-sketch-plugin` | 🚧 Coming soon |
-| `unoff create-framer-plugin` | 🚧 Coming soon |
+| Platform        | Status         |
+| --------------- | -------------- |
+| `figma-plugin`  | ✅ Available   |
+| `penpot-plugin` | ✅ Available   |
+| `sketch-plugin` | 🚧 Coming soon |
+| `framer-plugin` | 🚧 Coming soon |
 
 The interactive prompt will ask for plugin name, output directory, GitHub username, author, license, and which external services to enable:
 
