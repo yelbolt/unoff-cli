@@ -39,7 +39,7 @@ Create a new plugin for a specific platform.
 **Platforms:**
 
 - `figma-plugin` — Create a Figma plugin
-- `penpot-plugin` — Create a Penpot plugin (coming soon)
+- `penpot-plugin` — Create a Penpot plugin
 - `sketch-plugin` — Create a Sketch plugin (coming soon)
 - `framer-plugin` — Create a Framer plugin (coming soon)
 
@@ -48,9 +48,11 @@ Create a new plugin for a specific platform.
 ```bash
 # Interactive mode — will prompt for all information
 unoff create figma-plugin
+unoff create penpot-plugin
 
 # Custom output directory
 unoff create figma-plugin --dir ./my-projects
+unoff create penpot-plugin --dir ./my-projects
 ```
 
 ---
@@ -177,23 +179,73 @@ npm install
 
 # 3. Start development
 unoff dev
-
-# 4. In Figma: Plugins > Development > Import plugin from manifest...
-# Select the manifest.json file from your plugin directory
 ```
+
+### Figma
+
+```bash
+# 4. In Figma: Plugins > Development > Import plugin from manifest...
+#    Select the manifest.json file from your plugin directory
+```
+
+The `manifest.json` is at the root of the project. Figma loads the plugin directly from the filesystem.
+
+### Penpot
+
+```bash
+# 4. In Penpot: Main menu > Plugins > Manage plugins > Add plugin (+)
+#    Enter: http://localhost:4400/manifest.json
+```
+
+The `manifest.json` is served from `public/` at the root of the dev server (port `4400`). Penpot loads the plugin via URL — make sure `unoff dev` is running before connecting.
+
+---
 
 ### AI Tools Configuration
 
 The generated template includes configuration files for AI coding assistants:
 
 - `.github/copilot-instructions.md` — GitHub Copilot
-- `.cursorrules` — Cursor
-- `.windsurfrules` — Windsurf
-- `.clauderules` — Claude (VS Code)
-- `.mcp.json` — MCP servers (Figma design-to-code)
-- `.github/skills/` — Detailed skills documentation referenced by all AI tools
+- `.cursor/rules/project.mdc` — Cursor
+- `.windsurf/rules/project.md` — Windsurf
+- `CLAUDE.md` — Claude (VS Code / Claude Code)
 
 These files provide context about the project architecture, component library (`@unoff/ui`), and coding patterns so AI tools generate correct code out of the box.
+
+#### MCP servers
+
+Each template ships with pre-configured MCP servers for design-to-code workflows.
+
+**Figma** (`.vscode/mcp.json`, `.cursor/mcp.json`, `.windsurf/mcp.json`):
+
+```json
+{
+  "servers": {
+    "figma": { "type": "http", "url": "https://mcp.figma.com/mcp" },
+    "figma-desktop": { "type": "http", "url": "http://127.0.0.1:3845/mcp" },
+    "figma-console": { "command": "npx", "args": ["-y", "figma-console-mcp@latest"], "env": { "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE" } }
+  }
+}
+```
+
+Replace `figd_YOUR_TOKEN_HERE` with a [Figma personal access token](https://help.figma.com/hc/en-us/articles/8085703771159).
+
+**Penpot** (`.vscode/mcp.json`, `.cursor/mcp.json`, `.windsurf/mcp.json`):
+
+```json
+{
+  "servers": {
+    "penpot": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:4401/mcp", "--allow-http"]
+    }
+  }
+}
+```
+
+The Penpot MCP server runs on port `4401` alongside the plugin dev server (port `4400`). Both are started by `unoff dev`.
+
+---
 
 ## Environment Setup
 
@@ -250,6 +302,8 @@ unoff format
 
 ## Publishing
 
+### Figma
+
 Before publishing your plugin:
 
 1. Update the `id` in `manifest.json` with your plugin ID from Figma
@@ -257,7 +311,26 @@ Before publishing your plugin:
 3. Configure all environment variables
 4. Test thoroughly in Figma
 5. Build for production: `unoff build`
-6. Submit to Figma Community
+6. Submit to [Figma Community](https://www.figma.com/community)
+
+### Penpot
+
+Before publishing your plugin:
+
+1. Host the production build on a public server (the `public/` folder is served at the root)
+2. Update `public/manifest.json` with your plugin details
+3. Configure all environment variables
+4. Test thoroughly in Penpot using the hosted manifest URL
+5. Build for production: `unoff build`
+6. Submit to [Penpot Community](https://community.penpot.app) with your manifest URL
+
+**Beta testing** — to share a build before hosting:
+
+1. Go to the repository's GitHub Actions tab
+2. Run the `Build and Download` workflow on any branch
+3. Download the artifact (a ZIP of the built plugin)
+4. Unzip and serve locally (MAMP, WAMP, http-server, etc.)
+5. In Penpot: Manage plugins > Add plugin > enter `http://localhost:{yourPort}/manifest.json`
 
 ## Troubleshooting
 
@@ -280,11 +353,18 @@ npx @unoff/cli create figma-plugin
 Make sure you're using a valid platform name:
 
 - `figma-plugin` ✅
+- `penpot-plugin` ✅
 - `figma` ❌
 
 ### Directory already exists
 
 If the output directory already exists, the CLI will ask if you want to overwrite it. Choose 'Yes' to continue or 'No' to cancel.
+
+### Penpot — plugin not loading
+
+- Make sure `unoff dev` is running (serves on port `4400`)
+- Check that the URL entered in Penpot is exactly `http://localhost:4400/manifest.json`
+- Check the browser console for CORS errors — the `public/CORS` and `public/_headers` files handle this in production
 
 ## Support
 
