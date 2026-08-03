@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Claude Code onboarding — `unoff help` gained a `CLAUDE CODE` section, and `unoff create` now points to the [unoff plugin](https://github.com/yelbolt/unoff-claude-plugin) (skill library + 5 layer-specialized agents) via the yelbolt marketplace
+- `unoff add skills` now also surfaces the [skills.sh](https://skills.sh) alternative (`npx skills add yelbolt/unoff-skills`) and the plugin path
+- Documented both skill installation routes — git submodule vs. skills.sh copy — in `README.md` and `USAGE.md`
+
+### Fixed
+
+- Updated the `@unoff/ui` link to `yelbolt/unoff-ui` (the repo moved from `a-ng-d`)
+
 ## [0.3.0] - 2026-06-09
 
 ### Templates (Figma + Penpot)

@@ -1,5 +1,12 @@
 import chalk from 'chalk'
-import { WORKERS, WORKER_SCRIPTS, SKILLS_REPO } from './add.js'
+import {
+  WORKERS,
+  WORKER_SCRIPTS,
+  SKILLS_REPO,
+  SKILLS_PACKAGE,
+  CLAUDE_MARKETPLACE,
+  CLAUDE_PLUGIN,
+} from './add.js'
 
 const AVAILABLE_PLATFORMS = ['figma-plugin', 'penpot-plugin']
 const COMING_SOON_PLATFORMS = ['sketch-plugin', 'framer-plugin']
@@ -79,6 +86,11 @@ export function showHelp() {
   console.log(row('add skills', 'Add the unoff-skills repo as a git submodule'))
   console.log(chalk.gray(`  ${''.padEnd(36)}Repo: ${SKILLS_REPO}`))
   console.log(
+    chalk.gray(
+      `  ${''.padEnd(36)}Or copy them: npx skills add ${SKILLS_PACKAGE}`
+    )
+  )
+  console.log(
     row('add specs', 'Create a local specs folder with an empty skill template')
   )
   console.log()
@@ -92,6 +104,36 @@ export function showHelp() {
   )
   console.log(row('remove skills', 'Remove the skills submodule'))
   console.log(row('remove specs', 'Remove the local specs folder'))
+  console.log()
+
+  console.log(chalk.bold('CLAUDE CODE'))
+  console.log()
+  console.log(
+    chalk.gray(
+      '  The unoff plugin bundles the skill library with 5 agents that'
+    )
+  )
+  console.log(
+    chalk.gray('  know this architecture — Canvas, Bridge, UI, Config, review.')
+  )
+  console.log()
+  console.log(
+    `  ${chalk.gray('>')} /plugin marketplace add ${chalk.cyan(CLAUDE_MARKETPLACE)}`
+  )
+  console.log(
+    `  ${chalk.gray('>')} /plugin install ${chalk.cyan(CLAUDE_PLUGIN)}`
+  )
+  console.log()
+  console.log(chalk.gray('  Skills without the plugin — pick one:'))
+  const skillsCmds: [string, string][] = [
+    ['unoff add skills', 'git submodule, pinned in your repo'],
+    [`npx skills add ${SKILLS_PACKAGE}`, 'copied, works with any agent'],
+  ]
+  for (const [cmd, note] of skillsCmds) {
+    console.log(
+      `  ${chalk.gray('$')} ${cmd.padEnd(38)}${chalk.gray(`# ${note}`)}`
+    )
+  }
   console.log()
 
   console.log(chalk.bold('EXAMPLES'))

@@ -205,6 +205,18 @@ unoff add skills
 git submodule update --init --recursive
 ```
 
+The version is pinned in your project's history — update it deliberately with `git submodule update --remote`.
+
+**Alternative — [skills.sh](https://skills.sh)**, if you would rather copy the files than track a submodule:
+
+```bash
+npx skills add yelbolt/unoff-skills
+```
+
+This installs into every agent directory it detects (`.claude/`, `.cursor/`, …) instead of a single path, and records provenance in `skills-lock.json`. No git submodule, no pinning.
+
+Both give you the skill library only. For the skills **plus** the agents that use them, see [Claude Code](#claude-code) below.
+
 ### `unoff add specs`
 
 Create a local `specs/` folder (or any path you choose) with an empty skill template in Markdown. Useful for documenting project-specific conventions in the same format as unoff-skills.
@@ -239,6 +251,29 @@ Remove the local specs folder and all its contents.
 unoff remove specs
 ```
 
+## Claude Code
+
+The [unoff plugin](https://github.com/yelbolt/unoff-claude-plugin) is the recommended setup when you build with [Claude Code](https://code.claude.com/). It bundles the skill library with five agents that know this architecture — one per layer, plus a conformance reviewer that gates the diff.
+
+Install it from the yelbolt marketplace:
+
+```bash
+/plugin marketplace add yelbolt/claude-marketplace
+/plugin install unoff@yelbolt
+```
+
+The marketplace is shared with the other yelbolt plugins, so the first command is only needed once. Later releases: `/plugin marketplace update yelbolt`.
+
+| Agent                        | Owns                                                                            |
+| ---------------------------- | ------------------------------------------------------------------------------- |
+| `unoff-plugin-architect`     | **Default.** Resolves the target platform, decomposes and sequences by layer    |
+| `unoff-canvas-bridge`        | `src/index.ts`, `src/canvas/`, `src/bridges/` — Canvas APIs, storage, messaging |
+| `unoff-ui`                   | `src/app/` — Preact, `@unoff/ui`, Nanostores, theming, Tolgee, a11y             |
+| `unoff-platform-services`    | `global.config.ts`, Vite, feature flags, credits, external services, payments   |
+| `unoff-conformance-reviewer` | Quality gate — conventions, message contracts, Figma/Penpot parity, build       |
+
+Installing the plugin already includes the skills — you do not also need `unoff add skills`. Use that command (or `npx skills add`) when you want the skill library alone, for another agent or pinned in your repo.
+
 ## Features
 
 - 🚀 Quick setup with interactive CLI
@@ -252,7 +287,8 @@ unoff remove specs
 - 🌍 Internationalization (Tolgee)
 - 📢 Announcement & onboarding system (Notion + Cloudflare Workers)
 - ⚙️ Worker management via git submodules (`add worker` / `remove worker`)
-- 📚 Skills library integration via git submodule (`add skills` / `remove skills`)
+- 📚 Skills library via git submodule (`add skills` / `remove skills`) or [skills.sh](https://skills.sh)
+- 🤖 Claude Code plugin with 5 layer-specialized agents (`yelbolt/claude-marketplace`)
 - 📝 Project specs scaffolding (`add specs` / `remove specs`)
 - 📚 Comprehensive AI-assistant documentation
 
@@ -260,7 +296,7 @@ unoff remove specs
 
 ### UI & Components
 
-- [@unoff/ui](https://github.com/a-ng-d/unoff-ui) — Pre-built UI components for design tool plugins
+- [@unoff/ui](https://github.com/yelbolt/unoff-ui) — Pre-built UI components for design tool plugins
 
 ### Authentication & Database
 
