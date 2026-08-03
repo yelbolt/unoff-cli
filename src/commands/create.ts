@@ -6,6 +6,7 @@ import inquirer from 'inquirer'
 import Mustache from 'mustache'
 import { fileURLToPath } from 'url'
 import { spawnSync } from 'child_process'
+import { CLAUDE_MARKETPLACE, CLAUDE_PLUGIN } from './add.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -297,6 +298,20 @@ export async function createPlugin(platform: string) {
     console.log(chalk.white(`  cd ${pluginSlug}`))
     console.log(chalk.white(`  npm install`))
     console.log(chalk.white(`  unoff build`))
+
+    console.log(chalk.cyan('\n🤖 Building with Claude Code?\n'))
+    console.log(
+      chalk.gray('  Install the unoff plugin — skill library + 5 agents that')
+    )
+    console.log(
+      chalk.gray('  know this architecture (Canvas, Bridge, UI, Config):\n')
+    )
+    console.log(chalk.white(`  /plugin marketplace add ${CLAUDE_MARKETPLACE}`))
+    console.log(chalk.white(`  /plugin install ${CLAUDE_PLUGIN}`))
+    console.log(
+      chalk.gray(`\n  Skills only: ${chalk.white('unoff add skills')}`)
+    )
+
     console.log(chalk.cyan('\n✨ Happy coding!\n'))
   } catch (error) {
     spinner.fail(chalk.red('Failed to create plugin'))

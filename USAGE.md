@@ -212,6 +212,28 @@ The generated template includes configuration files for AI coding assistants:
 
 These files provide context about the project architecture, component library (`@unoff/ui`), and coding patterns so AI tools generate correct code out of the box.
 
+#### Claude Code plugin
+
+For Claude Code specifically, install the [unoff plugin](https://github.com/yelbolt/unoff-claude-plugin) — the skill library plus five agents scoped to the architecture layers (Canvas, Bridge, UI, Config/Externals) and a conformance reviewer that checks the diff against the stack conventions before you ship:
+
+```bash
+/plugin marketplace add yelbolt/claude-marketplace
+/plugin install unoff@yelbolt
+```
+
+Adding the marketplace is a one-time step shared with the other yelbolt plugins; refresh later with `/plugin marketplace update yelbolt`.
+
+#### Skill library on its own
+
+If you want the documentation without the agents — for another assistant, or pinned in your repo — install the skills directly:
+
+```bash
+unoff add skills                      # git submodule, version pinned in your history
+npx skills add yelbolt/unoff-skills   # copied files, installs into any detected agent
+```
+
+Skip both if you installed the Claude Code plugin: it already ships the same library.
+
 #### MCP servers
 
 Each template ships with pre-configured MCP servers for design-to-code workflows.
@@ -223,7 +245,11 @@ Each template ships with pre-configured MCP servers for design-to-code workflows
   "servers": {
     "figma": { "type": "http", "url": "https://mcp.figma.com/mcp" },
     "figma-desktop": { "type": "http", "url": "http://127.0.0.1:3845/mcp" },
-    "figma-console": { "command": "npx", "args": ["-y", "figma-console-mcp@latest"], "env": { "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE" } }
+    "figma-console": {
+      "command": "npx",
+      "args": ["-y", "figma-console-mcp@latest"],
+      "env": { "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE" }
+    }
   }
 }
 ```

@@ -6,6 +6,10 @@ import ora from 'ora'
 import inquirer from 'inquirer'
 
 export const SKILLS_REPO = 'https://github.com/yelbolt/unoff-skills'
+export const SKILLS_PACKAGE = 'yelbolt/unoff-skills'
+
+export const CLAUDE_MARKETPLACE = 'yelbolt/claude-marketplace'
+export const CLAUDE_PLUGIN = 'unoff@yelbolt'
 
 const SPEC_TEMPLATE = (name: string, title: string) => `---
 name: ${name}
@@ -284,6 +288,17 @@ export async function addSkills() {
 
   console.log(chalk.cyan('\n📦 Next steps:\n'))
   console.log(chalk.white(`  git submodule update --init --recursive`))
+
+  console.log(
+    chalk.gray(
+      `\n  Alternative — copy the skills instead of tracking a submodule:\n` +
+        `    npx skills add ${SKILLS_PACKAGE}\n` +
+        `  Or get them bundled with the agents, via the Claude Code plugin:\n` +
+        `    /plugin marketplace add ${CLAUDE_MARKETPLACE}\n` +
+        `    /plugin install ${CLAUDE_PLUGIN}`
+    )
+  )
+
   console.log(chalk.cyan('\n✨ Happy coding!\n'))
 }
 
