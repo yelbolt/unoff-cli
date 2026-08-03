@@ -5,10 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-08-03
+
+### Added
+
+- **Cross-assistant configuration.** The CLI no longer assumes Claude Code. `unoff ai` asks which assistants the project targets, persists the answer in `unoff.config.json`, and installs skills, agents and specs in the format each one reads. `unoff ai status` reports what is configured and what is actually installed.
+  - Supported: Claude Code, GitHub Copilot, ChatGPT/Codex, Cursor, Windsurf
+  - Only Claude Code (`.claude/agents/*.md`) and Copilot (`.github/agents/*.agent.md`) have a file-based agent format; for the others agents degrade into a role table inlined in their rules file
+  - Without a config file, commands fall back to detecting the assistants the project already shows traces of, then to the recommended defaults — nothing breaks for existing projects
+- **`unoff add agents`** — installs the five unoff agents for every configured assistant. Definitions live in `agents/` of [yelbolt/unoff-skills](https://github.com/yelbolt/unoff-skills), shared with the Claude Code plugin, and are re-serialized per target with only the frontmatter keys that assistant understands
+- Agents declare `layers` in the same vocabulary as functional specs, so a spec's layers resolve both to the skill files to read and to the agent that owns them
+
+- **`unoff add rules`** — writes project rules and MCP config for every configured assistant, from a single neutral source in `rules/` of [yelbolt/unoff-skills](https://github.com/yelbolt/unoff-skills). The body is identical across targets; only the frontmatter differs (Cursor `alwaysApply`, Windsurf `trigger`). Existing files are left alone unless `--force`, and the managed specs block is carried over when they are replaced
+- MCP configuration is generated per assistant from one definition — `.claude/settings.json`, `.vscode/mcp.json`, `.cursor/mcp.json`, `.windsurf/mcp.json` — merged into existing JSON so Claude permissions survive
+- `unoff create` now ends by running the assistant setup, so a fresh project gets rules, agents and MCP for the assistants you actually use
+
+### Changed
+
+- **Templates no longer ship AI configuration.** `CLAUDE.md`, `.github/copilot-instructions.md`, `.cursor/`, `.windsurf/`, `.vscode/mcp.json` and `.claude/settings.json` were removed from both plugin templates. They held ~800 lines per template saying the same thing four ways, already drifted apart (333 lines of diff between the Claude and Windsurf copies), and all hardcoded the Claude skills path. The CLI generates them per assistant instead
+- `unoff specs sync` is now config-driven: it writes only to the rules files of configured assistants, instead of to whichever instruction files happen to exist. Assistants you did not select are never touched
+- Assistants without an agent format get the agent role table inlined in their rules block
+
 ## [0.4.0] - 2026-08-03
 
 ### Added
 
+- **Functional specs are now discoverable by LLMs.** Specs previously landed in a folder no agent read; they are now wired into the same context as the implementation skills:
+  - `unoff add specs` scaffolds a spec declaring the `layers` and `platforms` it touches, plus a Problem / User flow / Rules / Out of scope structure
+  - `unoff specs sync` regenerates `specs/INDEX.md` — a layer → skill-file routing table — and injects a managed pointer block into the AI instruction files
+  - The block is delimited by `<!-- unoff:specs:start -->` / `<!-- unoff:specs:end -->` and replaced in place, so re-running never duplicates and surrounding content is preserved
+  - `AGENTS.md` is created when missing (cross-agent entry point for ChatGPT/Codex); other files are only updated when present
+  - Specs logic extracted to `src/commands/specs.ts`; `addSpecs` and `toTitleCase` stay re-exported from `add.ts`
 - Claude Code onboarding — `unoff help` gained a `CLAUDE CODE` section, and `unoff create` now points to the [unoff plugin](https://github.com/yelbolt/unoff-claude-plugin) (skill library + 5 layer-specialized agents) via the yelbolt marketplace
 - `unoff add skills` now also surfaces the [skills.sh](https://skills.sh) alternative (`npx skills add yelbolt/unoff-skills`) and the plugin path
 - Documented both skill installation routes — git submodule vs. skills.sh copy — in `README.md` and `USAGE.md`
@@ -16,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Updated the `@unoff/ui` link to `yelbolt/unoff-ui` (the repo moved from `a-ng-d`)
+- `unoff add skills` defaulteé&d to `.claude/skills/unoff-create-skills`, while every template instruction file (`CLAUDE.md`, Cursor, Windsurf, Copilot) links to `.claude/skills/unoff-create-plugin` — accepting the default broke all of those links. The path is now a single shared constant (`SKILLS_PATH`)
 
 ## [0.3.0] - 2026-06-09
 

@@ -7,29 +7,10 @@ import inquirer from 'inquirer'
 
 export const SKILLS_REPO = 'https://github.com/yelbolt/unoff-skills'
 export const SKILLS_PACKAGE = 'yelbolt/unoff-skills'
+export const SKILLS_PATH = '.claude/skills/unoff-create-plugin'
 
 export const CLAUDE_MARKETPLACE = 'yelbolt/claude-marketplace'
 export const CLAUDE_PLUGIN = 'unoff@yelbolt'
-
-const SPEC_TEMPLATE = (name: string, title: string) => `---
-name: ${name}
-description: Brief description of what this spec covers. Use when...
----
-
-# ${title}
-
-## Overview
-
-Brief description.
-
-## Details
-
-Your content here.
-`
-
-export function toTitleCase(str: string): string {
-  return str.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-}
 
 export const WORKERS: Record<string, string> = {
   announcement: 'https://github.com/a-ng-d/announcements-yelbolt-worker',
@@ -228,7 +209,7 @@ export async function addSkills() {
       type: 'input',
       name: 'submodulePath',
       message: 'Where do you want to add the skills submodule?',
-      default: '.claude/skills/unoff-create-skills',
+      default: SKILLS_PATH,
     },
   ])
 
@@ -302,56 +283,4 @@ export async function addSkills() {
   console.log(chalk.cyan('\n✨ Happy coding!\n'))
 }
 
-export async function addSpecs() {
-  const cwd = process.cwd()
-
-  const { specsDir } = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'specsDir',
-      message: 'Where do you want to create the specs folder?',
-      default: 'specs',
-    },
-  ])
-
-  const { specName } = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'specName',
-      message: 'Name of your first spec (kebab-case):',
-      default: 'my-spec',
-    },
-  ])
-
-  const specsPath = path.resolve(cwd, specsDir)
-  const specFilePath = path.join(specsPath, `${specName}.md`)
-
-  if (fs.existsSync(specFilePath)) {
-    console.error(
-      chalk.red(
-        `\n❌ Spec file "${specName}.md" already exists at "${specsDir}".\n`
-      )
-    )
-    process.exit(1)
-  }
-
-  const spinner = ora('Creating spec...').start()
-
-  await fs.ensureDir(specsPath)
-  await fs.writeFile(
-    specFilePath,
-    SPEC_TEMPLATE(specName, toTitleCase(specName))
-  )
-
-  spinner.succeed(
-    chalk.green(
-      `Spec created at ${chalk.white(path.join(specsDir, `${specName}.md`))}`
-    )
-  )
-
-  console.log(chalk.cyan('\n📝 Next steps:\n'))
-  console.log(
-    chalk.white(`  Edit your spec at ${path.join(specsDir, `${specName}.md`)}`)
-  )
-  console.log(chalk.cyan('\n✨ Happy coding!\n'))
-}
+export { addSpecs, toTitleCase } from './specs.js'
