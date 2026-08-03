@@ -18,11 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`unoff add rules`** — writes project rules and MCP config for every configured assistant, from a single neutral source in `rules/` of [yelbolt/unoff-skills](https://github.com/yelbolt/unoff-skills). The body is identical across targets; only the frontmatter differs (Cursor `alwaysApply`, Windsurf `trigger`). Existing files are left alone unless `--force`, and the managed specs block is carried over when they are replaced
 - MCP configuration is generated per assistant from one definition — `.claude/settings.json`, `.vscode/mcp.json`, `.cursor/mcp.json`, `.windsurf/mcp.json` — merged into existing JSON so Claude permissions survive
+- Skills are installed into the directory each assistant actually reads — `.claude/skills/`, `.agents/skills/` (Codex) or `.windsurf/skills/` — verified against `npx skills add -a '*'`. Cursor and Copilot read none, so their rules point at the canonical path instead. The canonical path follows the chosen assistants, so a Codex-only project never gets a `.claude/` folder
+- `unoff ai` seeds a starter spec when the specs folder is empty, so the sync has something to index instead of skipping
 - `unoff create` now ends by running the assistant setup, so a fresh project gets rules, agents and MCP for the assistants you actually use
 
 ### Changed
 
 - **Templates no longer ship AI configuration.** `CLAUDE.md`, `.github/copilot-instructions.md`, `.cursor/`, `.windsurf/`, `.vscode/mcp.json` and `.claude/settings.json` were removed from both plugin templates. They held ~800 lines per template saying the same thing four ways, already drifted apart (333 lines of diff between the Claude and Windsurf copies), and all hardcoded the Claude skills path. The CLI generates them per assistant instead
+- `specs/INDEX.md` and the rules routing block now use the project's configured skills path instead of a hardcoded `.claude/skills/…`
 - `unoff specs sync` is now config-driven: it writes only to the rules files of configured assistants, instead of to whichever instruction files happen to exist. Assistants you did not select are never touched
 - Assistants without an agent format get the agent role table inlined in their rules block
 

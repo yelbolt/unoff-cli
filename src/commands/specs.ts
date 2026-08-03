@@ -3,12 +3,12 @@ import fs from 'fs-extra'
 import chalk from 'chalk'
 import ora from 'ora'
 import inquirer from 'inquirer'
-import { SKILLS_PATH } from './add.js'
 import {
   LAYERS,
   PLATFORMS,
   Layer,
   Platform,
+  DEFAULT_CONFIG,
   getAssistant,
   resolveConfig,
   UnoffConfig,
@@ -185,7 +185,11 @@ export function skillsForLayers(
   return [...out]
 }
 
-export function renderIndex(specs: SpecMeta[], specsDir: string): string {
+export function renderIndex(
+  specs: SpecMeta[],
+  specsDir: string,
+  skillsPath: string = DEFAULT_CONFIG.skillsPath
+): string {
   const rows = specs.length
     ? specs
         .map((s) => {
@@ -202,7 +206,7 @@ export function renderIndex(specs: SpecMeta[], specsDir: string): string {
 # Functional specs
 
 What this product does. The **how** lives in the unoff skill library at
-\`${SKILLS_PATH}/\` — these two are meant to be read together.
+\`${skillsPath}/\` — these two are meant to be read together.
 
 | Spec | Description | Layers | Platforms | Status |
 | ---- | ----------- | ------ | --------- | ------ |
@@ -216,7 +220,7 @@ ${rows}
    declaring the work finished.
 3. Load the implementation skills for the layers it declares:
 
-| Layer | Load from \`${SKILLS_PATH}/\` |
+| Layer | Load from \`${skillsPath}/\` |
 | ----- | ---------------------------- |
 ${LAYERS.map((l) => `| \`${l}\` | ${LAYER_SKILLS[l].map((f) => `\`${f}\``).join(', ')} |`).join('\n')}
 
@@ -234,7 +238,8 @@ Specs live in \`${specsDir}/\`. Add one with \`unoff add specs\`, then run
 export function renderPointerBlock(
   specsDir: string,
   specs: SpecMeta[],
-  roles?: string
+  roles?: string,
+  skillsPath: string = DEFAULT_CONFIG.skillsPath
 ): string {
   const list = specs.length
     ? specs
@@ -254,7 +259,7 @@ export function renderPointerBlock(
 This project pairs **implementation skills** (how we build) with **functional
 specs** (what the product does). Read both before writing code.
 
-- **How** → \`${SKILLS_PATH}/\` — architecture, conventions, platform APIs
+- **How** → \`${skillsPath}/\` — architecture, conventions, platform APIs
 - **What** → \`${specsDir}/${INDEX_FILE}\` — product behaviour and rules
 
 When a task maps to a spec below, load that spec **and** the skill files for
@@ -360,7 +365,7 @@ export async function syncSpecs(
   const specs = await readSpecs(specsPath)
   await fs.writeFile(
     path.join(specsPath, INDEX_FILE),
-    renderIndex(specs, specsDir),
+    renderIndex(specs, specsDir, resolved.config.skillsPath),
     'utf-8'
   )
 
@@ -372,7 +377,8 @@ export async function syncSpecs(
     const block = renderPointerBlock(
       specsDir,
       specs,
-      assistant.agentsDir ? undefined : roles
+      assistant.agentsDir ? undefined : roles,
+      resolved.config.skillsPath
     )
     const outcome = await injectBlock(
       path.resolve(cwd, assistant.rulesFile),

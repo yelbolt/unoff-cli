@@ -303,7 +303,6 @@ export async function createPlugin(platform: string) {
       cwd: outputDir,
       platform: platform === 'penpot-plugin' ? 'penpot' : 'figma',
       pluginName,
-      intro: false,
     })
 
     console.log(chalk.cyan('✨ Happy coding!\n'))

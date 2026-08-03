@@ -14,7 +14,10 @@ import {
   getAssistant,
   readConfig,
   resolveConfig,
+  resolveSkillsPath,
+  skillsDirsFor,
   writeConfig,
+  SKILL_NAME,
 } from '../src/commands/config.js'
 import {
   emitAgents,
@@ -24,6 +27,7 @@ import {
   renderAgent,
   renderAgentRoles,
 } from '../src/commands/agents.js'
+import { pruneSkillsDirs } from '../src/commands/ai.js'
 
 let tmpDir: string
 
@@ -300,5 +304,121 @@ describe('renderAgentRoles()', () => {
 describe('assistant ids', () => {
   it('are unique', () => {
     expect(new Set(ASSISTANT_IDS).size).toBe(ASSISTANT_IDS.length)
+  })
+})
+
+describe('pruneSkillsDirs()', () => {
+  async function seedFanout() {
+    for (const dir of ['.claude', '.agents', '.windsurf', '.kiro', '.roo']) {
+      await fs.ensureDir(path.join(tmpDir, dir, 'skills', SKILL_NAME))
+      await fs.writeFile(
+        path.join(tmpDir, dir, 'skills', SKILL_NAME, 'SKILL.md'),
+        '# skill'
+      )
+    }
+    await fs.ensureDir(path.join(tmpDir, '.claude', 'agents'))
+    await fs.writeFile(
+      path.join(tmpDir, '.claude', 'agents', 'unoff-ui.md'),
+      'agent'
+    )
+    await fs.writeJson(path.join(tmpDir, '.claude', 'settings.json'), {
+      permissions: { allow: ['Bash'] },
+    })
+    await fs.ensureDir(path.join(tmpDir, '.windsurf', 'rules'))
+    await fs.writeFile(
+      path.join(tmpDir, '.windsurf', 'rules', 'project.md'),
+      'rules'
+    )
+  }
+
+  const exists = (...p: string[]) => fs.existsSync(path.join(tmpDir, ...p))
+
+  it('keeps the directories the configured assistants read', async () => {
+    await seedFanout()
+
+    await pruneSkillsDirs(tmpDir, {
+      assistants: ['codex'],
+      skillsPath: path.join('.agents', 'skills', SKILL_NAME),
+    })
+
+    expect(exists('.agents', 'skills', SKILL_NAME, 'SKILL.md')).toBe(true)
+    expect(exists('.kiro')).toBe(false)
+    expect(exists('.roo')).toBe(false)
+  })
+
+  it('never deletes a dot directory holding files we did not write', async () => {
+    await seedFanout()
+
+    await pruneSkillsDirs(tmpDir, {
+      assistants: ['codex'],
+      skillsPath: path.join('.agents', 'skills', SKILL_NAME),
+    })
+
+    expect(exists('.claude', 'skills')).toBe(false)
+    expect(exists('.claude', 'agents', 'unoff-ui.md')).toBe(true)
+    expect(exists('.claude', 'settings.json')).toBe(true)
+    expect(exists('.windsurf', 'rules', 'project.md')).toBe(true)
+  })
+
+  it('reports what it removed', async () => {
+    await seedFanout()
+
+    const removed = await pruneSkillsDirs(tmpDir, {
+      assistants: ['claude'],
+      skillsPath: path.join('.claude', 'skills', SKILL_NAME),
+    })
+
+    expect(removed).toContain(path.join('.kiro', 'skills', SKILL_NAME))
+    expect(removed).not.toContain(path.join('.claude', 'skills', SKILL_NAME))
+  })
+
+  it('is a no-op on a project with no fan-out', async () => {
+    await fs.ensureDir(path.join(tmpDir, '.claude'))
+    expect(
+      await pruneSkillsDirs(tmpDir, {
+        assistants: ['claude'],
+        skillsPath: path.join('.claude', 'skills', SKILL_NAME),
+      })
+    ).toEqual([])
+    expect(exists('.claude')).toBe(true)
+  })
+})
+
+describe('skills locations', () => {
+  it('only declares a skills directory where one is actually read', () => {
+    const withSkills = ASSISTANTS.filter((a) => a.skillsDir).map((a) => a.id)
+    expect(withSkills.sort()).toEqual(['claude', 'codex', 'windsurf'])
+  })
+
+  it('keeps Codex on .agents/skills rather than a Claude path', () => {
+    expect(resolveSkillsPath(['codex'])).toBe(
+      path.join('.agents', 'skills', SKILL_NAME)
+    )
+    expect(skillsDirsFor(['codex'])).toEqual([
+      path.join('.agents', 'skills', SKILL_NAME),
+    ])
+  })
+
+  it('prefers Claude when it is in the mix', () => {
+    expect(resolveSkillsPath(['codex', 'claude'])).toBe(
+      path.join('.claude', 'skills', SKILL_NAME)
+    )
+  })
+
+  it('falls back to a neutral path when no assistant reads a skills dir', () => {
+    expect(resolveSkillsPath(['cursor', 'copilot'])).toBe(
+      path.join('.agents', 'skills', SKILL_NAME)
+    )
+    expect(skillsDirsFor(['cursor', 'copilot'])).toEqual([])
+  })
+
+  it('lists every native directory for a full set', () => {
+    expect(
+      skillsDirsFor(['claude', 'copilot', 'codex', 'cursor', 'windsurf'])
+    ).toEqual([
+      path.join('.claude', 'skills', SKILL_NAME),
+      path.join('.agents', 'skills', SKILL_NAME),
+      path.join('.windsurf', 'skills', SKILL_NAME),
+    ])
   })
 })

@@ -17,6 +17,7 @@ export interface Assistant {
   rulesFile: string
   createRules: boolean
   agentsDir: string | null
+  skillsDir: string | null
   agentFile?: (name: string) => string
   agentFrontmatter?: string[]
   rulesFrontmatter?: (ctx: RulesContext) => string
@@ -41,6 +42,7 @@ export const ASSISTANTS: Assistant[] = [
     rulesFile: 'CLAUDE.md',
     createRules: true,
     agentsDir: path.join('.claude', 'agents'),
+    skillsDir: path.join('.claude', 'skills'),
     agentFile: (name) => `${name}.md`,
     agentFrontmatter: [
       'name',
@@ -61,6 +63,7 @@ export const ASSISTANTS: Assistant[] = [
     rulesFile: path.join('.github', 'copilot-instructions.md'),
     createRules: true,
     agentsDir: path.join('.github', 'agents'),
+    skillsDir: null,
     agentFile: (name) => `${name}.agent.md`,
     agentFrontmatter: ['name', 'description'],
     mcpFile: path.join('.vscode', 'mcp.json'),
@@ -74,10 +77,11 @@ export const ASSISTANTS: Assistant[] = [
     rulesFile: 'AGENTS.md',
     createRules: true,
     agentsDir: null,
+    skillsDir: path.join('.agents', 'skills'),
     mcpFile: null,
     mcpShape: null,
     recommended: true,
-    notes: 'AGENTS.md — no agent primitive',
+    notes: 'AGENTS.md + .agents/skills',
   },
   {
     id: 'cursor',
@@ -85,6 +89,7 @@ export const ASSISTANTS: Assistant[] = [
     rulesFile: path.join('.cursor', 'rules', 'project.mdc'),
     createRules: true,
     agentsDir: null,
+    skillsDir: null,
     rulesFrontmatter: (ctx) =>
       `description: Core project rules for ${ctx.pluginName} (${ctx.platform} plugin).\nglobs:\nalwaysApply: true`,
     mcpFile: path.join('.cursor', 'mcp.json'),
@@ -98,6 +103,7 @@ export const ASSISTANTS: Assistant[] = [
     rulesFile: path.join('.windsurf', 'rules', 'project.md'),
     createRules: true,
     agentsDir: null,
+    skillsDir: path.join('.windsurf', 'skills'),
     rulesFrontmatter: (ctx) =>
       `trigger: always_on\ndescription: Core project rules for ${ctx.pluginName} (${ctx.platform} plugin).`,
     mcpFile: path.join('.windsurf', 'mcp.json'),
@@ -123,10 +129,28 @@ export interface UnoffConfig {
   pluginName?: string
 }
 
+export const SKILL_NAME = 'unoff-create-plugin'
+
+export function resolveSkillsPath(assistants: AssistantId[]): string {
+  for (const id of ['claude', 'codex', 'windsurf'] as AssistantId[]) {
+    if (!assistants.includes(id)) continue
+    const dir = getAssistant(id).skillsDir
+    if (dir) return path.join(dir, SKILL_NAME)
+  }
+  return path.join('.agents', 'skills', SKILL_NAME)
+}
+
+export function skillsDirsFor(assistants: AssistantId[]): string[] {
+  return assistants
+    .map((id) => getAssistant(id).skillsDir)
+    .filter((d): d is string => d !== null)
+    .map((d) => path.join(d, SKILL_NAME))
+}
+
 export const DEFAULT_CONFIG: UnoffConfig = {
   assistants: ASSISTANTS.filter((a) => a.recommended).map((a) => a.id),
   specsDir: 'specs',
-  skillsPath: '.claude/skills/unoff-create-plugin',
+  skillsPath: path.join('.claude', 'skills', SKILL_NAME),
 }
 
 export function configPath(cwd: string): string {

@@ -217,13 +217,13 @@ unoff add rules          # rules + MCP only
 unoff add rules --force  # regenerate rules that already exist
 ```
 
-| Assistant       | Rules                             | MCP                     | Agents                      |
-| --------------- | --------------------------------- | ----------------------- | --------------------------- |
-| Claude Code     | `CLAUDE.md`                       | `.claude/settings.json` | `.claude/agents/*.md`       |
-| GitHub Copilot  | `.github/copilot-instructions.md` | `.vscode/mcp.json`      | `.github/agents/*.agent.md` |
-| ChatGPT / Codex | `AGENTS.md`                       | —                       | role table in rules         |
-| Cursor          | `.cursor/rules/project.mdc`       | `.cursor/mcp.json`      | role table in rules         |
-| Windsurf        | `.windsurf/rules/project.md`      | `.windsurf/mcp.json`    | role table in rules         |
+| Assistant       | Rules                             | Skills              | MCP                     | Agents                      |
+| --------------- | --------------------------------- | ------------------- | ----------------------- | --------------------------- |
+| Claude Code     | `CLAUDE.md`                       | `.claude/skills/`   | `.claude/settings.json` | `.claude/agents/*.md`       |
+| GitHub Copilot  | `.github/copilot-instructions.md` | — via rules path    | `.vscode/mcp.json`      | `.github/agents/*.agent.md` |
+| ChatGPT / Codex | `AGENTS.md`                       | `.agents/skills/`   | —                       | role table in rules         |
+| Cursor          | `.cursor/rules/project.mdc`       | — via rules path    | `.cursor/mcp.json`      | role table in rules         |
+| Windsurf        | `.windsurf/rules/project.md`      | `.windsurf/skills/` | `.windsurf/mcp.json`    | role table in rules         |
 
 The rules **body is byte-identical** across every target — only the frontmatter
 differs, because that is all that actually differs between these tools. Existing
@@ -255,12 +255,12 @@ unoff specs sync     # rebuild specs/INDEX.md + point every agent file at it
 Each spec declares `layers:` in its frontmatter (`canvas`, `bridge`, `ui`,
 `config`, `externals`). `specs/INDEX.md` maps those layers to the matching skill
 files, so an agent reading a spec knows exactly which architecture docs to load
-with it. `specs sync` writes a managed block into `CLAUDE.md`, `AGENTS.md`,
-`.cursor/rules/project.mdc`, `.windsurf/rules/project.md` and
-`.github/copilot-instructions.md` — replacing it in place on every run.
+with it. `specs sync` writes a managed block into the rules file of each configured
+assistant — replacing it in place on every run, never touching the others.
 
-`AGENTS.md` is created if absent; the others are only updated when they already
-exist. Everything outside the `<!-- unoff:specs:start -->` markers is preserved.
+Everything outside the `<!-- unoff:specs:start -->` markers is preserved. If the
+specs folder is empty, `unoff ai` seeds a starter spec so the index has something
+to point at.
 
 #### Skill library on its own
 

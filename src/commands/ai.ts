@@ -9,7 +9,10 @@ import {
   CONFIG_FILE,
   DEFAULT_CONFIG,
   Platform,
+  SKILL_NAME,
   UnoffConfig,
+  resolveSkillsPath,
+  skillsDirsFor,
   detectAssistants,
   getAssistant,
   readConfig,
@@ -17,13 +20,13 @@ import {
 } from './config.js'
 import { addAgents } from './agents.js'
 import { addRules } from './rules.js'
-import { syncSpecs, resolveSpecsDir } from './specs.js'
 import {
-  SKILLS_PACKAGE,
-  SKILLS_PATH,
-  CLAUDE_MARKETPLACE,
-  CLAUDE_PLUGIN,
-} from './add.js'
+  SPEC_TEMPLATE,
+  resolveSpecsDir,
+  syncSpecs,
+  toTitleCase,
+} from './specs.js'
+import { SKILLS_PACKAGE, CLAUDE_MARKETPLACE, CLAUDE_PLUGIN } from './add.js'
 
 type Piece = 'skills' | 'rules' | 'agents' | 'specs'
 
@@ -31,7 +34,6 @@ export interface ConfigureAiOptions {
   cwd?: string
   platform?: Platform
   pluginName?: string
-  intro?: boolean
 }
 
 export async function configureAi(options: ConfigureAiOptions = {}) {
@@ -97,7 +99,7 @@ export async function configureAi(options: ConfigureAiOptions = {}) {
   const config: UnoffConfig = {
     assistants: selected,
     specsDir: specsDir as string,
-    skillsPath: existing?.skillsPath ?? SKILLS_PATH,
+    skillsPath: resolveSkillsPath(selected),
     platform: options.platform ?? existing?.platform,
     pluginName: options.pluginName ?? existing?.pluginName,
   }
@@ -174,24 +176,76 @@ export async function configureAi(options: ConfigureAiOptions = {}) {
   }
 
   if (chosen.includes('specs')) {
-    const specsPath = path.resolve(cwd, config.specsDir)
-    if (!fs.existsSync(specsPath)) {
-      console.log(
-        chalk.yellow(
-          `\n⚠️  No specs folder at "${config.specsDir}" — skipping sync.`
-        )
-      )
-      console.log(
-        chalk.gray('   Create your first spec with `unoff add specs`.')
-      )
-      skipped.push('specs')
-    } else {
-      await syncSpecs(config.specsDir, config, cwd)
-      done.push('specs')
-    }
+    const seeded = await seedStarterSpec(cwd, config)
+    await syncSpecs(config.specsDir, config, cwd)
+    done.push(seeded ? 'specs (starter spec added)' : 'specs')
   }
 
   printSummary(config, done, skipped)
+}
+
+async function seedStarterSpec(
+  cwd: string,
+  config: UnoffConfig
+): Promise<boolean> {
+  const specsPath = path.resolve(cwd, config.specsDir)
+
+  if (fs.existsSync(specsPath)) {
+    const existing = (await fs.readdir(specsPath)).filter(
+      (f) => f.endsWith('.md') && f !== 'INDEX.md'
+    )
+    if (existing.length) return false
+  }
+
+  const name = 'example-feature'
+  await fs.ensureDir(specsPath)
+  await fs.writeFile(
+    path.join(specsPath, `${name}.md`),
+    SPEC_TEMPLATE({
+      name,
+      title: toTitleCase(name),
+      layers: ['ui'],
+      platforms: config.platform ? [config.platform] : ['figma', 'penpot'],
+    }),
+    'utf-8'
+  )
+
+  console.log(
+    chalk.gray(
+      `\n  Seeded ${path.join(config.specsDir, `${name}.md`)} — rewrite it, or replace it with\n` +
+        `  your own via \`unoff add specs\`.`
+    )
+  )
+  return true
+}
+
+export async function pruneSkillsDirs(
+  cwd: string,
+  config: Pick<UnoffConfig, 'assistants' | 'skillsPath'>
+): Promise<string[]> {
+  const keep = new Set([...skillsDirsFor(config.assistants), config.skillsPath])
+  const removed: string[] = []
+
+  for (const entry of await fs.readdir(cwd)) {
+    if (!entry.startsWith('.')) continue
+
+    const relative = path.join(entry, 'skills', SKILL_NAME)
+    if (keep.has(relative)) continue
+    if (!fs.existsSync(path.join(cwd, relative))) continue
+
+    await fs.remove(path.join(cwd, relative))
+    removed.push(relative)
+
+    // Take the parents with it only while they are empty.
+    for (const parent of [path.join(entry, 'skills'), entry]) {
+      const dir = path.join(cwd, parent)
+      if (fs.existsSync(dir) && (await fs.readdir(dir)).length === 0) {
+        await fs.remove(dir)
+      }
+    }
+  }
+
+  return removed
 }
 
 async function installSkills(
@@ -208,7 +262,7 @@ async function installSkills(
       'add',
       SKILLS_PACKAGE,
       '-s',
-      'unoff-create-plugin',
+      SKILL_NAME,
       '-y',
       '--copy',
     ],
@@ -224,22 +278,38 @@ async function installSkills(
     return false
   }
 
+  await pruneSkillsDirs(cwd, config)
+
   const canonical = path.join(cwd, config.skillsPath)
-  const fanout = path.join(cwd, '.claude', 'skills', 'unoff-create-plugin')
-
-  if (
-    fs.existsSync(fanout) &&
-    path.resolve(fanout) !== path.resolve(canonical)
-  ) {
-    await fs.ensureDir(path.dirname(canonical))
-    await fs.move(fanout, canonical, { overwrite: true })
+  if (!fs.existsSync(canonical)) {
+    const source = skillsDirsFor(config.assistants)
+      .map((d) => path.join(cwd, d))
+      .find((d) => fs.existsSync(d))
+    if (source) await fs.copy(source, canonical)
   }
 
-  for (const stray of ['.agents', '.kiro']) {
-    await fs.remove(path.join(cwd, stray))
+  const installed = [
+    ...new Set([config.skillsPath, ...skillsDirsFor(config.assistants)]),
+  ].filter((d) => fs.existsSync(path.join(cwd, d)))
+
+  console.log()
+  for (const dir of installed) {
+    console.log(`  ${chalk.green('skills'.padEnd(10))}${chalk.gray(dir + '/')}`)
   }
 
-  console.log(chalk.green(`\n✅ Skills at ${chalk.white(config.skillsPath)}`))
+  const withoutDir = config.assistants.filter(
+    (id) => !getAssistant(id).skillsDir
+  )
+  if (withoutDir.length) {
+    console.log(
+      chalk.gray(
+        `\n  ${withoutDir.map((id) => getAssistant(id).label).join(', ')} ` +
+          `${withoutDir.length === 1 ? 'reads' : 'read'} no skills directory —\n` +
+          `  their rules point at ${config.skillsPath}/ instead.`
+      )
+    )
+  }
+
   return true
 }
 

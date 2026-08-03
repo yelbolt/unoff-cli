@@ -198,7 +198,7 @@ npm run start:announcements
 
 ### `unoff add skills`
 
-Add the [unoff-skills](https://github.com/yelbolt/unoff-skills) repository as a git submodule. You will be prompted for the destination path (default: `.claude/skills/unoff-create-plugin` — the path the template's `CLAUDE.md`, Cursor, Windsurf and Copilot instruction files link to).
+Add the [unoff-skills](https://github.com/yelbolt/unoff-skills) repository as a git submodule. You will be prompted for the destination path. Prefer `unoff ai`, which picks the directory each configured assistant actually reads.
 
 ```bash
 unoff add skills
@@ -319,15 +319,21 @@ Your choice is persisted in `unoff.config.json` and committed, so the whole team
 
 ### What each assistant gets
 
-| Assistant       | Rules file                        | Agents                      |
-| --------------- | --------------------------------- | --------------------------- |
-| Claude Code     | `CLAUDE.md`                       | `.claude/agents/*.md`       |
-| GitHub Copilot  | `.github/copilot-instructions.md` | `.github/agents/*.agent.md` |
-| ChatGPT / Codex | `AGENTS.md`                       | role table in rules         |
-| Cursor          | `.cursor/rules/project.mdc`       | role table in rules         |
-| Windsurf        | `.windsurf/rules/project.md`      | role table in rules         |
+| Assistant       | Rules                             | Skills              | Agents                      | MCP                     |
+| --------------- | --------------------------------- | ------------------- | --------------------------- | ----------------------- |
+| Claude Code     | `CLAUDE.md`                       | `.claude/skills/`   | `.claude/agents/*.md`       | `.claude/settings.json` |
+| GitHub Copilot  | `.github/copilot-instructions.md` | — via rules path    | `.github/agents/*.agent.md` | `.vscode/mcp.json`      |
+| ChatGPT / Codex | `AGENTS.md`                       | `.agents/skills/`   | role table in rules         | —                       |
+| Cursor          | `.cursor/rules/project.mdc`       | — via rules path    | role table in rules         | `.cursor/mcp.json`      |
+| Windsurf        | `.windsurf/rules/project.md`      | `.windsurf/skills/` | role table in rules         | `.windsurf/mcp.json`    |
 
-Only Claude Code and Copilot have a file-based agent format. Rather than pretend otherwise, the CLI **degrades** agents for the others into a role table inside the rules file they already read — same routing information, expressed as instructions.
+Every column is a capability some tools have and others don't, so the CLI degrades rather than pretends:
+
+- **Agents** — only Claude Code and Copilot have a file-based format. For the rest, agents become a role table inlined in the rules file they already read: same routing information, expressed as instructions.
+- **Skills** — only Claude Code, Codex and Windsurf read a skills directory (verified against `npx skills add -a '*'`; Cursor and Copilot create none). The library is installed once at a canonical path, and every rules file points at it explicitly — so it works even where there is no native directory.
+- **MCP** — one server definition per platform, three different wrappers. The write **merges** into existing JSON, so Claude's `permissions` survive.
+
+The canonical skills path follows the assistants you chose: `.claude/skills/…` when Claude is in the set, otherwise `.agents/skills/…`. A Codex-only project never ends up with a `.claude/` folder.
 
 ### `unoff add agents`
 
