@@ -5,8 +5,12 @@ import fs from 'fs-extra'
 
 import {
   MCP_SERVERS,
+  PENPOT_CLOUD,
+  PENPOT_TOKEN_VAR,
   emitRules,
+  mcpServers,
   renderMcp,
+  renderMcpToml,
   renderRules,
   wrapRules,
   detectPlatform,
@@ -14,7 +18,11 @@ import {
   buildRulesContext,
   findLocalRules,
 } from '../src/commands/rules.js'
-import { ASSISTANTS, RulesContext } from '../src/commands/config.js'
+import {
+  ASSISTANTS,
+  RulesContext,
+  getAssistant,
+} from '../src/commands/config.js'
 
 let tmpDir: string
 
@@ -95,11 +103,30 @@ describe('wrapRules()', () => {
   })
 })
 
+describe('MCP_SERVERS', () => {
+  it('gives both platforms a hosted and a machine-local endpoint', () => {
+    for (const platform of ['figma', 'penpot'] as const) {
+      const scopes = MCP_SERVERS[platform].map((s) => s.scope)
+      expect(scopes).toContain('remote')
+      expect(scopes).toContain('local')
+    }
+  })
+
+  it('declares either a url or a command for every server', () => {
+    for (const servers of Object.values(MCP_SERVERS)) {
+      for (const server of servers) {
+        expect(Boolean(server.url) !== Boolean(server.command)).toBe(true)
+      }
+    }
+  })
+})
+
 describe('renderMcp()', () => {
-  it('uses the mcpServers shape as-is', () => {
-    const out = renderMcp('figma', 'mcpServers') as Record<string, unknown>
-    expect(out).toHaveProperty('mcpServers')
-    expect(out.mcpServers).toEqual(MCP_SERVERS.figma)
+  it('uses a plain url for the mcpServers shape', () => {
+    const out = renderMcp('figma', 'mcpServers') as {
+      mcpServers: Record<string, Record<string, unknown>>
+    }
+    expect(out.mcpServers.figma).toEqual({ url: 'https://mcp.figma.com/mcp' })
   })
 
   it('marks HTTP servers with a type in the VS Code shape', () => {
@@ -111,9 +138,107 @@ describe('renderMcp()', () => {
     expect(out.servers['figma-console'].type).toBeUndefined()
   })
 
-  it('serves penpot servers for penpot', () => {
-    const out = renderMcp('penpot', 'mcpServers') as Record<string, unknown>
-    expect(Object.keys(out.mcpServers as object)).toEqual(['penpot'])
+  it('uses serverUrl for Windsurf — a plain url is ignored there', () => {
+    const out = renderMcp('figma', 'serverUrl') as {
+      mcpServers: Record<string, Record<string, unknown>>
+    }
+    expect(out.mcpServers.figma.serverUrl).toBe('https://mcp.figma.com/mcp')
+    expect(out.mcpServers.figma.url).toBeUndefined()
+  })
+
+  it('leaves stdio entries untouched across every shape', () => {
+    for (const shape of ['mcpServers', 'servers', 'serverUrl'] as const) {
+      const out = renderMcp('figma', shape) as {
+        [k: string]: Record<string, Record<string, unknown>>
+      }
+      const key = shape === 'servers' ? 'servers' : 'mcpServers'
+      expect(out[key]['figma-console'].command).toBe('npx')
+      expect(out[key]['figma-console'].env).toEqual({
+        FIGMA_ACCESS_TOKEN: 'figd_YOUR_TOKEN_HERE',
+      })
+    }
+  })
+
+  it('serves penpot endpoints for penpot', () => {
+    const out = renderMcp('penpot', 'mcpServers') as {
+      mcpServers: Record<string, unknown>
+    }
+    expect(Object.keys(out.mcpServers)).toEqual(['penpot', 'penpot-dev'])
+  })
+})
+
+describe('Penpot instance and token', () => {
+  it('uses the configured instance URL, trailing slash trimmed', () => {
+    const [remote] = mcpServers('penpot', {
+      penpotUrl: 'https://penpot.acme.internal/',
+    })
+    expect(remote.url).toContain('https://penpot.acme.internal/mcp/stream')
+    expect(remote.url).not.toContain('.internal//mcp')
+  })
+
+  it('falls back to Penpot Cloud', () => {
+    const [remote] = mcpServers('penpot')
+    expect(remote.url?.startsWith(PENPOT_CLOUD)).toBe(true)
+  })
+
+  it('references the env var where the assistant expands it in a url', () => {
+    const claude = mcpServers('penpot', {
+      urlEnvSyntax: getAssistant('claude').urlEnvSyntax,
+    })[0]
+    expect(claude.url).toContain(`\${${PENPOT_TOKEN_VAR}}`)
+
+    const windsurf = mcpServers('penpot', {
+      urlEnvSyntax: getAssistant('windsurf').urlEnvSyntax,
+    })[0]
+    expect(windsurf.url).toContain(`\${env:${PENPOT_TOKEN_VAR}}`)
+  })
+
+  it('keeps a placeholder — never a value — where it does not expand', () => {
+    for (const id of ['cursor', 'copilot', 'codex'] as const) {
+      const [remote] = mcpServers('penpot', {
+        urlEnvSyntax: getAssistant(id).urlEnvSyntax,
+      })
+      expect(remote.url).toContain(`YOUR_${PENPOT_TOKEN_VAR}`)
+      expect(remote.url).not.toContain('${')
+    }
+  })
+
+  it('leaves the local dev server untouched', () => {
+    const servers = mcpServers('penpot', { penpotUrl: 'https://x.test' })
+    const local = servers.find((s) => s.scope === 'local')
+    expect(local?.args).toContain('http://localhost:4401/mcp')
+  })
+
+  it('ignores the context for figma', () => {
+    const servers = mcpServers('figma', { penpotUrl: 'https://x.test' })
+    expect(servers.every((s) => !s.url?.includes('x.test'))).toBe(true)
+  })
+})
+
+describe('renderMcpToml()', () => {
+  it('emits a table per server, url for HTTP', () => {
+    const toml = renderMcpToml(MCP_SERVERS.figma)
+    expect(toml).toContain('[mcp_servers.figma]')
+    expect(toml).toContain('url = "https://mcp.figma.com/mcp"')
+  })
+
+  it('emits command, args and env_vars for stdio', () => {
+    const toml = renderMcpToml(MCP_SERVERS.figma)
+    expect(toml).toContain('[mcp_servers.figma-console]')
+    expect(toml).toContain('command = "npx"')
+    expect(toml).toContain('args = ["-y", "figma-console-mcp@latest"]')
+    expect(toml).toContain('env_vars = ["FIGMA_ACCESS_TOKEN"]')
+    expect(toml).not.toContain('figd_YOUR_TOKEN_HERE')
+  })
+
+  it('never emits both url and command for one server', () => {
+    for (const servers of Object.values(MCP_SERVERS)) {
+      for (const block of renderMcpToml(servers).split('\n\n')) {
+        expect(block.includes('url = ') && block.includes('command = ')).toBe(
+          false
+        )
+      }
+    }
   })
 })
 
@@ -133,13 +258,18 @@ describe('emitRules()', () => {
     expect(copilot).toBe(claude)
   })
 
-  it('writes MCP config where the assistant declares one', async () => {
+  it('writes MCP config in each assistant own format', async () => {
     await emitRules(tmpDir, 'BODY', CTX(), ['cursor', 'copilot', 'codex'])
 
     expect(fs.existsSync(path.join(tmpDir, '.cursor', 'mcp.json'))).toBe(true)
     expect(fs.existsSync(path.join(tmpDir, '.vscode', 'mcp.json'))).toBe(true)
-    // Codex declares none
-    expect(fs.existsSync(path.join(tmpDir, 'AGENTS.md'))).toBe(true)
+
+    const toml = await fs.readFile(
+      path.join(tmpDir, '.codex', 'config.toml'),
+      'utf-8'
+    )
+    expect(toml).toContain('[mcp_servers.figma]')
+    expect(() => JSON.parse(toml)).toThrow()
   })
 
   it('merges MCP into an existing settings file instead of replacing it', async () => {

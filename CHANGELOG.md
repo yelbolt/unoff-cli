@@ -17,10 +17,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Agents declare `layers` in the same vocabulary as functional specs, so a spec's layers resolve both to the skill files to read and to the agent that owns them
 
 - **`unoff add rules`** — writes project rules and MCP config for every configured assistant, from a single neutral source in `rules/` of [yelbolt/unoff-skills](https://github.com/yelbolt/unoff-skills). The body is identical across targets; only the frontmatter differs (Cursor `alwaysApply`, Windsurf `trigger`). Existing files are left alone unless `--force`, and the managed specs block is carried over when they are replaced
+- `unoff ai` asks for the Penpot instance URL (Cloud or self-hosted, stored in `unoff.config.json`) and optionally for the platform token, which is written to `.env.local` — never into a committed MCP file
+- MCP now covers both endpoints per platform — hosted (`mcp.figma.com`, `design.penpot.app`) and machine-local (Figma desktop `127.0.0.1:3845`, Penpot dev server `localhost:4401`)
 - MCP configuration is generated per assistant from one definition — `.claude/settings.json`, `.vscode/mcp.json`, `.cursor/mcp.json`, `.windsurf/mcp.json` — merged into existing JSON so Claude permissions survive
 - Skills are installed into the directory each assistant actually reads — `.claude/skills/`, `.agents/skills/` (Codex) or `.windsurf/skills/` — verified against `npx skills add -a '*'`. Cursor and Copilot read none, so their rules point at the canonical path instead. The canonical path follows the chosen assistants, so a Codex-only project never gets a `.claude/` folder
 - `unoff ai` seeds a starter spec when the specs folder is empty, so the sync has something to index instead of skipping
 - `unoff create` now ends by running the assistant setup, so a fresh project gets rules, agents and MCP for the assistants you actually use
+
+### Fixed
+
+- Windsurf MCP entries used `url`, which Windsurf ignores — it reads `serverUrl`. Every remote server was silently unavailable there
+- Codex got no MCP configuration at all, despite supporting both stdio and streamable HTTP. It now gets `.codex/config.toml` in TOML, not JSON
+- Penpot shipped only the local dev endpoint; the hosted Penpot MCP is now configured alongside it
+- `unoff ai` deleted whole dot directories when pruning the skills fan-out, taking `.claude/agents/`, `.claude/settings.json` or Windsurf rules with them. It now removes the skill folder only, and its parents just while they are empty
 
 ### Changed
 

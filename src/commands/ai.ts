@@ -27,6 +27,12 @@ import {
   toTitleCase,
 } from './specs.js'
 import { SKILLS_PACKAGE, CLAUDE_MARKETPLACE, CLAUDE_PLUGIN } from './add.js'
+import {
+  FIGMA_TOKEN_VAR,
+  PENPOT_CLOUD,
+  PENPOT_TOKEN_VAR,
+  detectPlatform,
+} from './rules.js'
 
 type Piece = 'skills' | 'rules' | 'agents' | 'specs'
 
@@ -96,12 +102,19 @@ export async function configureAi(options: ConfigureAiOptions = {}) {
     },
   ])
 
+  const platform =
+    options.platform ?? existing?.platform ?? detectPlatform(cwd) ?? 'figma'
+
+  const penpotUrl =
+    platform === 'penpot' ? await askPenpotUrl(existing?.penpotUrl) : undefined
+
   const config: UnoffConfig = {
     assistants: selected,
     specsDir: specsDir as string,
     skillsPath: resolveSkillsPath(selected),
-    platform: options.platform ?? existing?.platform,
+    platform,
     pluginName: options.pluginName ?? existing?.pluginName,
+    penpotUrl,
   }
 
   await writeConfig(cwd, config)
@@ -181,7 +194,76 @@ export async function configureAi(options: ConfigureAiOptions = {}) {
     done.push(seeded ? 'specs (starter spec added)' : 'specs')
   }
 
+  if (chosen.includes('rules')) await askTokens(cwd, config)
+
   printSummary(config, done, skipped)
+}
+
+async function askPenpotUrl(existing?: string): Promise<string> {
+  const { url } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'url',
+      message: 'Penpot instance URL (Cloud, or your self-hosted domain):',
+      default: existing ?? PENPOT_CLOUD,
+      filter: (input: string) => input.trim().replace(/\/+$/, ''),
+      validate: (input: string) =>
+        /^https?:\/\//.test(input) || 'Must start with http:// or https://',
+    },
+  ])
+  return url as string
+}
+
+async function askTokens(cwd: string, config: UnoffConfig) {
+  const variable =
+    config.platform === 'penpot' ? PENPOT_TOKEN_VAR : FIGMA_TOKEN_VAR
+  const where =
+    config.platform === 'penpot'
+      ? 'Penpot → Account → Integrations'
+      : 'Figma → Settings → Security → Personal access tokens'
+
+  const { token } = await inquirer.prompt([
+    {
+      type: 'password',
+      name: 'token',
+      mask: '*',
+      message: `${variable} (optional, from ${where}) — stored in .env.local:`,
+    },
+  ])
+
+  const value = (token as string)?.trim()
+  if (!value) {
+    console.log(
+      chalk.gray(`\n  No token stored. Set ${variable} in .env.local later.`)
+    )
+    return
+  }
+
+  const envPath = path.join(cwd, '.env.local')
+  const previous = fs.existsSync(envPath)
+    ? await fs.readFile(envPath, 'utf-8')
+    : ''
+  const line = `${variable}='${value}'`
+  const next = new RegExp(`^${variable}=.*$`, 'm').test(previous)
+    ? previous.replace(new RegExp(`^${variable}=.*$`, 'm'), line)
+    : `${previous.trimEnd()}\n${line}\n`.trimStart()
+
+  await fs.writeFile(envPath, next, 'utf-8')
+  console.log(chalk.green(`\n✅ ${variable} written to .env.local`))
+
+  const cannotExpand = config.assistants.filter(
+    (id) => getAssistant(id).mcpFile && !getAssistant(id).urlEnvSyntax
+  )
+  if (cannotExpand.length && config.platform === 'penpot') {
+    console.log(
+      chalk.yellow(
+        `\n⚠️  ${cannotExpand.map((id) => getAssistant(id).label).join(', ')} ` +
+          `do not expand env vars inside a server URL.\n` +
+          `   Their MCP files keep a YOUR_${PENPOT_TOKEN_VAR} placeholder — paste the\n` +
+          `   token there yourself, and keep those files out of git.`
+      )
+    )
+  }
 }
 
 async function seedStarterSpec(

@@ -22,10 +22,13 @@ export interface Assistant {
   agentFrontmatter?: string[]
   rulesFrontmatter?: (ctx: RulesContext) => string
   mcpFile: string | null
-  mcpShape: 'mcpServers' | 'servers' | null
+  mcpShape: McpShape | null
+  urlEnvSyntax: ((name: string) => string) | null
   recommended: boolean
   notes: string
 }
+
+export type McpShape = 'mcpServers' | 'servers' | 'serverUrl' | 'toml'
 
 export interface RulesContext {
   pluginName: string
@@ -54,6 +57,7 @@ export const ASSISTANTS: Assistant[] = [
     ],
     mcpFile: path.join('.claude', 'settings.json'),
     mcpShape: 'mcpServers',
+    urlEnvSyntax: (name) => `\${${name}}`,
     recommended: true,
     notes: 'skills + subagents + CLAUDE.md',
   },
@@ -68,6 +72,7 @@ export const ASSISTANTS: Assistant[] = [
     agentFrontmatter: ['name', 'description'],
     mcpFile: path.join('.vscode', 'mcp.json'),
     mcpShape: 'servers',
+    urlEnvSyntax: null,
     recommended: true,
     notes: 'custom agents + instructions',
   },
@@ -78,8 +83,9 @@ export const ASSISTANTS: Assistant[] = [
     createRules: true,
     agentsDir: null,
     skillsDir: path.join('.agents', 'skills'),
-    mcpFile: null,
-    mcpShape: null,
+    mcpFile: path.join('.codex', 'config.toml'),
+    mcpShape: 'toml',
+    urlEnvSyntax: null,
     recommended: true,
     notes: 'AGENTS.md + .agents/skills',
   },
@@ -94,6 +100,7 @@ export const ASSISTANTS: Assistant[] = [
       `description: Core project rules for ${ctx.pluginName} (${ctx.platform} plugin).\nglobs:\nalwaysApply: true`,
     mcpFile: path.join('.cursor', 'mcp.json'),
     mcpShape: 'mcpServers',
+    urlEnvSyntax: null,
     recommended: true,
     notes: 'rules + MCP — no agent primitive',
   },
@@ -107,7 +114,8 @@ export const ASSISTANTS: Assistant[] = [
     rulesFrontmatter: (ctx) =>
       `trigger: always_on\ndescription: Core project rules for ${ctx.pluginName} (${ctx.platform} plugin).`,
     mcpFile: path.join('.windsurf', 'mcp.json'),
-    mcpShape: 'mcpServers',
+    mcpShape: 'serverUrl',
+    urlEnvSyntax: (name) => `\${env:${name}}`,
     recommended: false,
     notes: 'rules + MCP — no agent primitive',
   },
@@ -127,6 +135,7 @@ export interface UnoffConfig {
   skillsPath: string
   platform?: Platform
   pluginName?: string
+  penpotUrl?: string
 }
 
 export const SKILL_NAME = 'unoff-create-plugin'
@@ -185,6 +194,10 @@ export async function readConfig(cwd: string): Promise<UnoffConfig | null> {
       pluginName:
         typeof raw.pluginName === 'string' && raw.pluginName
           ? raw.pluginName
+          : undefined,
+      penpotUrl:
+        typeof raw.penpotUrl === 'string' && raw.penpotUrl
+          ? raw.penpotUrl.replace(/\/+$/, '')
           : undefined,
     }
   } catch {

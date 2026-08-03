@@ -6,6 +6,7 @@ import Mustache from 'mustache'
 import { spawnSync } from 'child_process'
 import {
   AssistantId,
+  McpShape,
   Platform,
   RulesContext,
   UnoffConfig,
@@ -17,37 +18,126 @@ import { SKILLS_REPO } from './add.js'
 export const RULES_SOURCE_DIR = 'rules'
 export const RULES_FILE = 'plugin.md'
 
-export const MCP_SERVERS: Record<Platform, Record<string, unknown>> = {
-  figma: {
-    figma: { url: 'https://mcp.figma.com/mcp' },
-    'figma-desktop': { url: 'http://127.0.0.1:3845/mcp' },
-    'figma-console': {
+export interface McpServer {
+  name: string
+  scope: 'local' | 'remote'
+  url?: string
+  command?: string
+  args?: string[]
+  env?: Record<string, string>
+}
+
+export const PENPOT_CLOUD = 'https://design.penpot.app'
+export const FIGMA_TOKEN_VAR = 'FIGMA_ACCESS_TOKEN'
+export const PENPOT_TOKEN_VAR = 'PENPOT_USER_TOKEN'
+
+export interface McpContext {
+  penpotUrl?: string
+  urlEnvSyntax?: ((name: string) => string) | null
+}
+
+export function mcpServers(
+  platform: Platform,
+  ctx: McpContext = {}
+): McpServer[] {
+  if (platform === 'figma') return MCP_SERVERS.figma
+
+  const base = (ctx.penpotUrl || PENPOT_CLOUD).replace(/\/+$/, '')
+  const token = ctx.urlEnvSyntax
+    ? ctx.urlEnvSyntax(PENPOT_TOKEN_VAR)
+    : `YOUR_${PENPOT_TOKEN_VAR}`
+
+  return MCP_SERVERS.penpot.map((server) =>
+    server.name === 'penpot'
+      ? { ...server, url: `${base}/mcp/stream?userToken=${token}` }
+      : server
+  )
+}
+
+export const MCP_SERVERS: Record<Platform, McpServer[]> = {
+  figma: [
+    { name: 'figma', scope: 'remote', url: 'https://mcp.figma.com/mcp' },
+    {
+      name: 'figma-desktop',
+      scope: 'local',
+      url: 'http://127.0.0.1:3845/mcp',
+    },
+    {
+      name: 'figma-console',
+      scope: 'local',
       command: 'npx',
       args: ['-y', 'figma-console-mcp@latest'],
       env: { FIGMA_ACCESS_TOKEN: 'figd_YOUR_TOKEN_HERE' },
     },
-  },
-  penpot: {
-    penpot: {
+  ],
+  penpot: [
+    {
+      name: 'penpot',
+      scope: 'remote',
+      url: `${PENPOT_CLOUD}/mcp/stream?userToken=YOUR_PENPOT_USER_TOKEN`,
+    },
+    {
+      name: 'penpot-dev',
+      scope: 'local',
       command: 'npx',
       args: ['-y', 'mcp-remote', 'http://localhost:4401/mcp', '--allow-http'],
     },
-  },
+  ],
 }
 
-export function renderMcp(platform: Platform, shape: 'mcpServers' | 'servers') {
-  const servers = MCP_SERVERS[platform]
+function stdioEntry(server: McpServer) {
+  return {
+    command: server.command,
+    ...(server.args ? { args: server.args } : {}),
+    ...(server.env ? { env: server.env } : {}),
+  }
+}
 
-  if (shape === 'mcpServers') return { mcpServers: servers }
+function tomlValue(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(tomlValue).join(', ')}]`
+  return JSON.stringify(value)
+}
 
-  // VS Code marks HTTP servers explicitly; stdio entries stay as-is.
-  const withType = Object.fromEntries(
-    Object.entries(servers).map(([name, def]) => {
-      const entry = def as Record<string, unknown>
-      return [name, 'url' in entry ? { type: 'http', ...entry } : entry]
+export function renderMcpToml(servers: McpServer[]): string {
+  return servers
+    .map((server) => {
+      const lines = [`[mcp_servers.${server.name}]`]
+      if (server.url) {
+        lines.push(`url = ${tomlValue(server.url)}`)
+      } else {
+        lines.push(`command = ${tomlValue(server.command)}`)
+        if (server.args) lines.push(`args = ${tomlValue(server.args)}`)
+        if (server.env) {
+          lines.push(`env_vars = ${tomlValue(Object.keys(server.env))}`)
+        }
+      }
+      return lines.join('\n')
     })
-  )
-  return { servers: withType }
+    .join('\n\n')
+}
+
+export function renderMcp(
+  platform: Platform,
+  shape: McpShape,
+  ctx: McpContext = {}
+) {
+  const servers = mcpServers(platform, ctx)
+
+  const entries = servers.map((server): [string, unknown] => {
+    if (!server.url) return [server.name, stdioEntry(server)]
+
+    switch (shape) {
+      case 'servers':
+        return [server.name, { type: 'http', url: server.url }]
+      case 'serverUrl':
+        return [server.name, { serverUrl: server.url }]
+      default:
+        return [server.name, { url: server.url }]
+    }
+  })
+
+  const key = shape === 'servers' ? 'servers' : 'mcpServers'
+  return { [key]: Object.fromEntries(entries) }
 }
 
 export function renderRules(source: string, ctx: RulesContext): string {
@@ -128,17 +218,12 @@ export interface RulesResult {
 
 const SPECS_BLOCK = /<!-- unoff:specs:start -->[\s\S]*<!-- unoff:specs:end -->/
 
-/**
- * Rules files are generated, but users edit them. An existing file is left
- * alone unless `force` is set — except for the managed specs block, which is
- * carried over so `specs sync` does not have to run again.
- */
 export async function emitRules(
   cwd: string,
   body: string,
   ctx: RulesContext,
   assistants: AssistantId[],
-  { force = false }: { force?: boolean } = {}
+  { force = false, penpotUrl }: { force?: boolean; penpotUrl?: string } = {}
 ): Promise<RulesResult[]> {
   const results: RulesResult[] = []
 
@@ -169,23 +254,39 @@ export async function emitRules(
     if (assistant.mcpFile && assistant.mcpShape) {
       const mcpPath = path.join(cwd, assistant.mcpFile)
       if (!fs.existsSync(mcpPath) || force) {
-        // Merge rather than replace: .claude/settings.json also carries
-        // permissions, which are none of our business.
-        let existing: Record<string, unknown> = {}
-        if (fs.existsSync(mcpPath)) {
-          try {
-            existing = await fs.readJson(mcpPath)
-          } catch {
-            existing = {}
-          }
+        await fs.ensureDir(path.dirname(mcpPath))
+
+        const mcpCtx = {
+          penpotUrl,
+          urlEnvSyntax: assistant.urlEnvSyntax,
         }
 
-        await fs.ensureDir(path.dirname(mcpPath))
-        await fs.writeJson(
-          mcpPath,
-          { ...existing, ...renderMcp(ctx.platformSlug, assistant.mcpShape) },
-          { spaces: 2 }
-        )
+        if (assistant.mcpShape === 'toml') {
+          await fs.writeFile(
+            mcpPath,
+            renderMcpToml(mcpServers(ctx.platformSlug, mcpCtx)) + '\n',
+            'utf-8'
+          )
+        } else {
+          let existing: Record<string, unknown> = {}
+          if (fs.existsSync(mcpPath)) {
+            try {
+              existing = await fs.readJson(mcpPath)
+            } catch {
+              existing = {}
+            }
+          }
+
+          await fs.writeJson(
+            mcpPath,
+            {
+              ...existing,
+              ...renderMcp(ctx.platformSlug, assistant.mcpShape, mcpCtx),
+            },
+            { spaces: 2 }
+          )
+        }
+
         mcp = assistant.mcpFile
       }
     }
@@ -266,7 +367,7 @@ export async function addRules(
     rendered,
     ctx,
     resolved.config.assistants,
-    { force }
+    { force, penpotUrl: resolved.config.penpotUrl }
   )
 
   const written = results.filter((r) => r.status !== 'skipped').length

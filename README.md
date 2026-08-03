@@ -319,19 +319,19 @@ Your choice is persisted in `unoff.config.json` and committed, so the whole team
 
 ### What each assistant gets
 
-| Assistant       | Rules                             | Skills              | Agents                      | MCP                     |
-| --------------- | --------------------------------- | ------------------- | --------------------------- | ----------------------- |
-| Claude Code     | `CLAUDE.md`                       | `.claude/skills/`   | `.claude/agents/*.md`       | `.claude/settings.json` |
-| GitHub Copilot  | `.github/copilot-instructions.md` | — via rules path    | `.github/agents/*.agent.md` | `.vscode/mcp.json`      |
-| ChatGPT / Codex | `AGENTS.md`                       | `.agents/skills/`   | role table in rules         | —                       |
-| Cursor          | `.cursor/rules/project.mdc`       | — via rules path    | role table in rules         | `.cursor/mcp.json`      |
-| Windsurf        | `.windsurf/rules/project.md`      | `.windsurf/skills/` | role table in rules         | `.windsurf/mcp.json`    |
+| Assistant       | Rules                             | Skills              | Agents                      | MCP                                    |
+| --------------- | --------------------------------- | ------------------- | --------------------------- | -------------------------------------- |
+| Claude Code     | `CLAUDE.md`                       | `.claude/skills/`   | `.claude/agents/*.md`       | `.claude/settings.json` — `url`        |
+| GitHub Copilot  | `.github/copilot-instructions.md` | — via rules path    | `.github/agents/*.agent.md` | `.vscode/mcp.json` — `type` + `url`    |
+| ChatGPT / Codex | `AGENTS.md`                       | `.agents/skills/`   | role table in rules         | `.codex/config.toml` — **TOML**        |
+| Cursor          | `.cursor/rules/project.mdc`       | — via rules path    | role table in rules         | `.cursor/mcp.json` — `url`             |
+| Windsurf        | `.windsurf/rules/project.md`      | `.windsurf/skills/` | role table in rules         | `.windsurf/mcp.json` — **`serverUrl`** |
 
 Every column is a capability some tools have and others don't, so the CLI degrades rather than pretends:
 
 - **Agents** — only Claude Code and Copilot have a file-based format. For the rest, agents become a role table inlined in the rules file they already read: same routing information, expressed as instructions.
 - **Skills** — only Claude Code, Codex and Windsurf read a skills directory (verified against `npx skills add -a '*'`; Cursor and Copilot create none). The library is installed once at a canonical path, and every rules file points at it explicitly — so it works even where there is no native directory.
-- **MCP** — one server definition per platform, three different wrappers. The write **merges** into existing JSON, so Claude's `permissions` survive.
+- **MCP** — one server definition per platform, four different spellings. Windsurf reads `serverUrl` and silently ignores a plain `url`; Codex reads TOML, not JSON; VS Code wants an explicit `type: "http"`. Each platform ships a hosted endpoint **and** a machine-local one (Figma desktop on `127.0.0.1:3845`, the Penpot dev server on `localhost:4401`). The write **merges** into existing JSON, so Claude's `permissions` survive.
 
 The canonical skills path follows the assistants you chose: `.claude/skills/…` when Claude is in the set, otherwise `.agents/skills/…`. A Codex-only project never ends up with a `.claude/` folder.
 
