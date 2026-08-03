@@ -7,6 +7,7 @@ import {
   CLAUDE_MARKETPLACE,
   CLAUDE_PLUGIN,
 } from './add.js'
+import { ASSISTANTS } from './config.js'
 
 const AVAILABLE_PLATFORMS = ['figma-plugin', 'penpot-plugin']
 const COMING_SOON_PLATFORMS = ['sketch-plugin', 'framer-plugin']
@@ -91,7 +92,34 @@ export function showHelp() {
     )
   )
   console.log(
-    row('add specs', 'Create a local specs folder with an empty skill template')
+    row('add specs', 'Scaffold a functional spec (product behaviour)')
+  )
+  console.log(
+    chalk.gray(`  ${''.padEnd(36)}Declares layers → routes agents to skills`)
+  )
+  console.log(row('add rules', 'Write project rules + MCP for your assistants'))
+  console.log(
+    chalk.gray(`  ${''.padEnd(36)}--force to regenerate existing files`)
+  )
+  console.log(
+    row('add agents', 'Install the 5 unoff agents for your assistants')
+  )
+  console.log(
+    chalk.gray(`  ${''.padEnd(36)}Claude + Copilot: files · others: role table`)
+  )
+  console.log()
+
+  console.log(chalk.dim('  — AI'))
+  console.log(row('ai', 'Choose assistants, then install skills/agents/specs'))
+  console.log(row('ai status', 'Show what is configured and installed'))
+  console.log()
+
+  console.log(chalk.dim('  — Specs'))
+  console.log(
+    row('specs sync [dir]', 'Rebuild the specs index + agent pointers')
+  )
+  console.log(
+    chalk.gray(`  ${''.padEnd(36)}Writes to your configured assistants only`)
   )
   console.log()
 
@@ -106,15 +134,49 @@ export function showHelp() {
   console.log(row('remove specs', 'Remove the local specs folder'))
   console.log()
 
-  console.log(chalk.bold('CLAUDE CODE'))
+  console.log(chalk.bold('AI ASSISTANTS'))
   console.log()
   console.log(
     chalk.gray(
-      '  The unoff plugin bundles the skill library with 5 agents that'
+      '  Three pieces, installed per assistant in the format it reads:'
     )
   )
   console.log(
-    chalk.gray('  know this architecture — Canvas, Bridge, UI, Config, review.')
+    chalk.gray(
+      '    skills  how we build   ·   specs  what it does   ·   agents  who does it'
+    )
+  )
+  console.log(
+    chalk.gray(
+      '    rules + MCP are generated too — templates ship none of them'
+    )
+  )
+  console.log()
+  console.log(
+    `  ${chalk.gray('$')} unoff ai${chalk.gray('    # pick assistants, install all three')}`
+  )
+  console.log()
+  for (const a of ASSISTANTS) {
+    const agents = a.agentsDir
+      ? chalk.green(a.agentsDir + '/')
+      : chalk.gray('role table in rules')
+    console.log(
+      `  ${chalk.cyan(a.label.padEnd(17))}${chalk.gray(a.rulesFile.padEnd(34))}${agents}`
+    )
+  }
+  console.log()
+  console.log(
+    chalk.gray('  Cursor, Windsurf and Codex have no agent file format —')
+  )
+  console.log(
+    chalk.gray('  agents degrade into a role table inside their rules file.')
+  )
+  console.log()
+
+  console.log(chalk.bold('CLAUDE CODE'))
+  console.log()
+  console.log(
+    chalk.gray('  Claude users can get skills + agents as a plugin instead:')
   )
   console.log()
   console.log(
@@ -141,9 +203,14 @@ export function showHelp() {
   console.log(`  ${chalk.gray('$')} unoff create figma-plugin`)
   console.log(`  ${chalk.gray('$')} unoff create penpot-plugin`)
   console.log(`  ${chalk.gray('$')} unoff dev`)
+  console.log(`  ${chalk.gray('$')} unoff ai`)
+  console.log(`  ${chalk.gray('$')} unoff ai status`)
   console.log(`  ${chalk.gray('$')} unoff add worker announcement`)
   console.log(`  ${chalk.gray('$')} unoff add skills`)
+  console.log(`  ${chalk.gray('$')} unoff add rules --force`)
+  console.log(`  ${chalk.gray('$')} unoff add agents`)
   console.log(`  ${chalk.gray('$')} unoff add specs`)
+  console.log(`  ${chalk.gray('$')} unoff specs sync`)
   console.log(`  ${chalk.gray('$')} unoff remove worker cors`)
   console.log(`  ${chalk.gray('$')} unoff remove skills`)
   console.log(`  ${chalk.gray('$')} unoff remove specs`)

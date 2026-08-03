@@ -4,7 +4,11 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import { createPlugin } from './commands/create.js'
 import { runScript } from './commands/run.js'
-import { addWorker, addSkills, addSpecs } from './commands/add.js'
+import { addWorker, addSkills } from './commands/add.js'
+import { addSpecs, syncSpecs } from './commands/specs.js'
+import { addAgents } from './commands/agents.js'
+import { addRules } from './commands/rules.js'
+import { configureAi, showAiStatus } from './commands/ai.js'
 import { removeWorker, removeSkills, removeSpecs } from './commands/remove.js'
 import { showHelp } from './commands/help.js'
 
@@ -134,6 +138,78 @@ addCmd
       await addSpecs()
     } catch (error) {
       console.error(chalk.red('\n❌ Error adding specs:'), error)
+      process.exit(1)
+    }
+  })
+
+const aiCmd = program
+  .command('ai')
+  .description(
+    'Configure which AI assistants this project targets, and install skills, agents and specs for them'
+  )
+  .action(async () => {
+    try {
+      await configureAi()
+    } catch (error) {
+      console.error(chalk.red('\n❌ Error configuring assistants:'), error)
+      process.exit(1)
+    }
+  })
+
+aiCmd
+  .command('status')
+  .description('Show the configured assistants and what is installed')
+  .action(async () => {
+    try {
+      await showAiStatus()
+    } catch (error) {
+      console.error(chalk.red('\n❌ Error reading configuration:'), error)
+      process.exit(1)
+    }
+  })
+
+addCmd
+  .command('rules')
+  .description(
+    'Write project rules and MCP config for every configured assistant'
+  )
+  .option('-f, --force', 'Regenerate rules files that already exist')
+  .action(async (options: { force?: boolean }) => {
+    try {
+      await addRules(undefined, { force: options.force })
+    } catch (error) {
+      console.error(chalk.red('\n❌ Error adding rules:'), error)
+      process.exit(1)
+    }
+  })
+
+addCmd
+  .command('agents')
+  .description('Install the unoff agents for every configured assistant')
+  .action(async () => {
+    try {
+      await addAgents()
+    } catch (error) {
+      console.error(chalk.red('\n❌ Error adding agents:'), error)
+      process.exit(1)
+    }
+  })
+
+const specsCmd = program
+  .command('specs')
+  .description('Manage functional specs and their agent discovery')
+
+specsCmd
+  .command('sync')
+  .description(
+    'Regenerate the specs index and point AI instruction files at it'
+  )
+  .argument('[dir]', 'Specs folder (auto-detected if omitted)')
+  .action(async (dir?: string) => {
+    try {
+      await syncSpecs(dir)
+    } catch (error) {
+      console.error(chalk.red('\n❌ Error syncing specs:'), error)
       process.exit(1)
     }
   })

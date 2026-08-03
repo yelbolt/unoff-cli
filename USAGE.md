@@ -203,14 +203,51 @@ The `manifest.json` is served from `public/` at the root of the dev server (port
 
 ### AI Tools Configuration
 
-The generated template includes configuration files for AI coding assistants:
+The template ships **no** assistant configuration. `unoff create` ends by asking
+which assistants you use, and writes only those — no dead `.cursor/` folder in a
+project that never opens Cursor.
 
-- `.github/copilot-instructions.md` — GitHub Copilot
-- `.cursor/rules/project.mdc` — Cursor
-- `.windsurf/rules/project.md` — Windsurf
-- `CLAUDE.md` — Claude (VS Code / Claude Code)
+Rules, agents and MCP config are generated per assistant from a single source in
+[yelbolt/unoff-skills](https://github.com/yelbolt/unoff-skills). Re-run at any
+time:
 
-These files provide context about the project architecture, component library (`@unoff/ui`), and coding patterns so AI tools generate correct code out of the box.
+```bash
+unoff ai                 # reconfigure and reinstall
+unoff add rules          # rules + MCP only
+unoff add rules --force  # regenerate rules that already exist
+```
+
+| Assistant       | Rules                             | Skills              | MCP                     | Agents                      |
+| --------------- | --------------------------------- | ------------------- | ----------------------- | --------------------------- |
+| Claude Code     | `CLAUDE.md`                       | `.claude/skills/`   | `.claude/settings.json` | `.claude/agents/*.md`       |
+| GitHub Copilot  | `.github/copilot-instructions.md` | — via rules path    | `.vscode/mcp.json`      | `.github/agents/*.agent.md` |
+| ChatGPT / Codex | `AGENTS.md`                       | `.agents/skills/`   | `.codex/config.toml`    | role table in rules         |
+| Cursor          | `.cursor/rules/project.mdc`       | — via rules path    | `.cursor/mcp.json`      | role table in rules         |
+| Windsurf        | `.windsurf/rules/project.md`      | `.windsurf/skills/` | `.windsurf/mcp.json`    | role table in rules         |
+
+Each platform gets a hosted endpoint and a machine-local one:
+
+| Platform | Remote                                   | Local                                            |
+| -------- | ---------------------------------------- | ------------------------------------------------ |
+| Figma    | `mcp.figma.com/mcp`                      | Figma desktop `127.0.0.1:3845` + `figma-console` |
+| Penpot   | `design.penpot.app/mcp/stream?userToken` | dev server `localhost:4401` via `mcp-remote`     |
+
+`unoff ai` asks for the Penpot instance URL — Cloud or self-hosted — and stores it in `unoff.config.json`, which is safe to commit.
+
+Tokens are different. The wizard offers to store them in `.env.local` (gitignored) and **never writes a value into an MCP file**. How the token then reaches the server depends on the tool:
+
+| Assistant              | Token in a server URL                 |
+| ---------------------- | ------------------------------------- |
+| Claude Code            | `${PENPOT_USER_TOKEN}` — expanded     |
+| Windsurf               | `${env:PENPOT_USER_TOKEN}` — expanded |
+| Cursor, Copilot, Codex | placeholder — paste it yourself       |
+
+Only Claude and Windsurf document env expansion inside a `url`, so the others keep a `YOUR_PENPOT_USER_TOKEN` placeholder and the wizard says so rather than writing something that silently fails. For Figma, `figma-console` takes its token through `env`, which every tool supports — and the Codex TOML references it by variable **name** (`env_vars`), so nothing sensitive lands there either.
+
+The rules **body is byte-identical** across every target — only the frontmatter
+differs, because that is all that actually differs between these tools. Existing
+rules files are never overwritten without `--force`, and the managed specs block
+is carried across when they are.
 
 #### Claude Code plugin
 
@@ -222,6 +259,27 @@ For Claude Code specifically, install the [unoff plugin](https://github.com/yelb
 ```
 
 Adding the marketplace is a one-time step shared with the other yelbolt plugins; refresh later with `/plugin marketplace update yelbolt`.
+
+#### Functional specs
+
+Skills describe **how** this architecture works. They say nothing about **what
+your** plugin does. `unoff add specs` covers that second half, in a form agents
+discover on their own:
+
+```bash
+unoff add specs      # scaffold a spec, declaring the layers it touches
+unoff specs sync     # rebuild specs/INDEX.md + point every agent file at it
+```
+
+Each spec declares `layers:` in its frontmatter (`canvas`, `bridge`, `ui`,
+`config`, `externals`). `specs/INDEX.md` maps those layers to the matching skill
+files, so an agent reading a spec knows exactly which architecture docs to load
+with it. `specs sync` writes a managed block into the rules file of each configured
+assistant — replacing it in place on every run, never touching the others.
+
+Everything outside the `<!-- unoff:specs:start -->` markers is preserved. If the
+specs folder is empty, `unoff ai` seeds a starter spec so the index has something
+to point at.
 
 #### Skill library on its own
 
