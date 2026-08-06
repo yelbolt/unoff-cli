@@ -4,10 +4,18 @@ import fs from 'fs-extra'
 import chalk from 'chalk'
 import ora from 'ora'
 import inquirer from 'inquirer'
+import {
+  SKILL_NAME,
+  UnoffConfig,
+  resolveConfig,
+  skillsDirsFor,
+} from './config.js'
 
 export const SKILLS_REPO = 'https://github.com/yelbolt/unoff-skills'
 export const SKILLS_PACKAGE = 'yelbolt/unoff-skills'
-export const SKILLS_PATH = '.claude/skills/unoff-create-plugin'
+
+export const SKILLS_SUBMODULE_PATH = path.join('.unoff', 'skills')
+export const SKILLS_PATH = path.join('.claude', 'skills', SKILL_NAME)
 
 export const CLAUDE_MARKETPLACE = 'yelbolt/claude-marketplace'
 export const CLAUDE_PLUGIN = 'unoff@yelbolt'
@@ -181,6 +189,87 @@ export async function addWorker(workerName: string) {
   console.log(chalk.cyan('\n✨ Happy coding!\n'))
 }
 
+export function extractSubmodulePath(
+  gitmodulesContent: string,
+  repoUrl: string
+): string | null {
+  const blocks = gitmodulesContent.split(/\[submodule\s+/)
+  for (const block of blocks) {
+    if (!block.includes(repoUrl)) continue
+    const pathMatch = block.match(/^\s*path\s*=\s*(.+)$/m)
+    if (pathMatch) return pathMatch[1].trim()
+  }
+  return null
+}
+
+export function skillLinkPaths(
+  config: Pick<UnoffConfig, 'assistants' | 'skillsPath'>
+): string[] {
+  return [...new Set([config.skillsPath, ...skillsDirsFor(config.assistants)])]
+}
+
+export async function linkSkill(
+  cwd: string,
+  submodulePath: string,
+  linkPath: string
+): Promise<'linked' | 'copied' | 'skipped'> {
+  const target = path.resolve(cwd, submodulePath, SKILL_NAME)
+  const link = path.resolve(cwd, linkPath)
+
+  if (!fs.existsSync(target)) return 'skipped'
+
+  // Only ever replace something we put there ourselves.
+  const previous = await fs.lstat(link).catch(() => null)
+  if (previous && !previous.isSymbolicLink()) {
+    const { overwrite } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'overwrite',
+        message: `"${linkPath}" already exists. Replace it with a link to the submodule?`,
+        default: false,
+      },
+    ])
+    if (!overwrite) return 'skipped'
+  }
+
+  await fs.ensureDir(path.dirname(link))
+  if (previous) await fs.remove(link)
+
+  try {
+    if (process.platform === 'win32') {
+      await fs.symlink(target, link, 'junction')
+    } else {
+      await fs.symlink(path.relative(path.dirname(link), target), link)
+    }
+    return 'linked'
+  } catch {
+    await fs.copy(target, link)
+    return 'copied'
+  }
+}
+
+export async function unlinkSkills(
+  cwd: string,
+  linkPaths: string[]
+): Promise<string[]> {
+  const removed: string[] = []
+
+  for (const relative of linkPaths) {
+    const link = path.resolve(cwd, relative)
+    const stat = await fs.lstat(link).catch(() => null)
+    if (!stat?.isSymbolicLink()) continue
+
+    await fs.remove(link)
+    removed.push(relative)
+  }
+
+  return removed
+}
+
+export function isNestedSkillsPath(submodulePath: string): boolean {
+  return path.basename(submodulePath) === SKILL_NAME
+}
+
 export async function addSkills() {
   // Check if git is available
   const gitCheck = spawnSync('git', ['--version'], { encoding: 'utf-8' })
@@ -203,33 +292,71 @@ export async function addSkills() {
     process.exit(1)
   }
 
+  const { config } = await resolveConfig(cwd)
+  const gitmodulesPath = path.join(cwd, '.gitmodules')
+  const gitmodules = fs.existsSync(gitmodulesPath)
+    ? await fs.readFile(gitmodulesPath, 'utf-8')
+    : ''
+  const existingPath = gitmodules.includes(SKILLS_REPO)
+    ? extractSubmodulePath(gitmodules, SKILLS_REPO)
+    : null
+
+  if (existingPath) {
+    if (!isNestedSkillsPath(existingPath)) {
+      console.error(
+        chalk.red(
+          `\n❌ Skills submodule already exists at "${existingPath}".\n`
+        )
+      )
+      console.error(
+        chalk.yellow(
+          `Relink it into your skills directories with \`unoff sync skills\`,\n` +
+            `or remove it first with \`unoff remove skills\`.\n`
+        )
+      )
+      process.exit(1)
+    }
+
+    await repairNestedSkills(cwd, existingPath, config)
+    return
+  }
+
   // Ask where to place the submodule
   const { submodulePath } = await inquirer.prompt([
     {
       type: 'input',
       name: 'submodulePath',
       message: 'Where do you want to add the skills submodule?',
-      default: SKILLS_PATH,
+      default: SKILLS_SUBMODULE_PATH,
     },
   ])
 
+  if (isNestedSkillsPath(submodulePath)) {
+    console.error(
+      chalk.red(
+        `\n❌ "${submodulePath}" would nest the repo one level too deep.\n`
+      )
+    )
+    console.error(
+      chalk.yellow(
+        `The submodule clones the whole unoff-skills repo, which already holds a\n` +
+          `${SKILL_NAME}/ folder — SKILL.md would end up at\n` +
+          `${path.join(submodulePath, SKILL_NAME, 'SKILL.md')}, where no assistant looks.\n\n` +
+          `Pick a path outside your skills directories (default: ${SKILLS_SUBMODULE_PATH}).\n`
+      )
+    )
+    process.exit(1)
+  }
+
   const resolvedPath = path.resolve(cwd, submodulePath)
 
-  // Check if submodule already exists in .gitmodules
-  const gitmodulesPath = path.join(cwd, '.gitmodules')
-  if (fs.existsSync(gitmodulesPath)) {
-    const gitmodulesContent = await fs.readFile(gitmodulesPath, 'utf-8')
-    if (
-      gitmodulesContent.includes(SKILLS_REPO) ||
-      gitmodulesContent.includes(submodulePath)
-    ) {
-      console.error(
-        chalk.red(
-          `\n❌ Submodule already exists at "${submodulePath}" or with the same URL.\n`
-        )
+  if (gitmodules.includes(`path = ${submodulePath}`)) {
+    console.error(
+      chalk.red(
+        `\n❌ A submodule is already registered at "${submodulePath}".\n`
       )
-      process.exit(1)
-    }
+    )
+    process.exit(1)
   }
 
   // Check if directory already exists and is not empty
@@ -267,6 +394,8 @@ export async function addSkills() {
     chalk.green(`Skills submodule added at ${chalk.white(submodulePath)}`)
   )
 
+  await reportLinks(cwd, submodulePath, config)
+
   console.log(chalk.cyan('\n📦 Next steps:\n'))
   console.log(chalk.white(`  git submodule update --init --recursive`))
 
@@ -281,6 +410,133 @@ export async function addSkills() {
   )
 
   console.log(chalk.cyan('\n✨ Happy coding!\n'))
+}
+
+async function repairNestedSkills(
+  cwd: string,
+  currentPath: string,
+  config: UnoffConfig
+) {
+  console.log(
+    chalk.yellow(
+      `\n⚠️  The skills submodule sits at "${currentPath}", inside a skills directory.\n` +
+        `   That buries SKILL.md at ${path.join(currentPath, SKILL_NAME, 'SKILL.md')},\n` +
+        `   one level deeper than Claude or Codex look — so the skill never loads.\n`
+    )
+  )
+
+  const { destination } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'destination',
+      message: 'Move the submodule to:',
+      default: SKILLS_SUBMODULE_PATH,
+    },
+  ])
+
+  if (isNestedSkillsPath(destination)) {
+    console.error(
+      chalk.red(
+        `\n❌ "${destination}" has the same problem. Pick another path.\n`
+      )
+    )
+    process.exit(1)
+  }
+
+  const spinner = ora('Moving skills submodule...').start()
+
+  await fs.ensureDir(path.resolve(cwd, path.dirname(destination)))
+  const moved = spawnSync('git', ['mv', currentPath, destination], {
+    cwd,
+    encoding: 'utf-8',
+  })
+
+  if (moved.status !== 0) {
+    spinner.fail(chalk.red('Failed to move the submodule'))
+    console.error(chalk.red(`\n${moved.stderr}\n`))
+    console.error(
+      chalk.yellow(
+        `Remove it with \`unoff remove skills\`, then run \`unoff add skills\` again.\n`
+      )
+    )
+    process.exit(1)
+  }
+
+  spinner.succeed(
+    chalk.green(
+      `Skills submodule moved to ${chalk.white(destination)} — one level up`
+    )
+  )
+
+  await reportLinks(cwd, destination, config)
+  console.log(chalk.cyan('\n✨ Your assistants can load the skill now.\n'))
+}
+
+async function reportLinks(
+  cwd: string,
+  submodulePath: string,
+  config: UnoffConfig
+) {
+  const links = skillLinkPaths(config)
+  if (!links.length) return
+
+  console.log()
+  for (const relative of links) {
+    const outcome = await linkSkill(cwd, submodulePath, relative)
+    const label =
+      outcome === 'linked'
+        ? chalk.green('linked')
+        : outcome === 'copied'
+          ? chalk.cyan('copied')
+          : chalk.gray('skipped')
+    console.log(`  ${label.padEnd(18)}${chalk.gray(relative + '/')}`)
+  }
+
+  console.log(
+    chalk.gray(
+      `\n  Each one points at ${path.join(submodulePath, SKILL_NAME)}/, so SKILL.md\n` +
+        `  lands exactly where every assistant looks for it.`
+    )
+  )
+}
+
+export async function syncSkills() {
+  const cwd = process.cwd()
+  const { config } = await resolveConfig(cwd)
+
+  const gitmodulesPath = path.join(cwd, '.gitmodules')
+  const gitmodules = fs.existsSync(gitmodulesPath)
+    ? await fs.readFile(gitmodulesPath, 'utf-8')
+    : ''
+  const submodulePath = extractSubmodulePath(gitmodules, SKILLS_REPO)
+
+  if (!submodulePath) {
+    console.error(
+      chalk.red(`\n❌ No skills submodule registered in .gitmodules.\n`)
+    )
+    console.error(chalk.yellow(`Add one with \`unoff add skills\`.\n`))
+    process.exit(1)
+  }
+
+  if (isNestedSkillsPath(submodulePath)) {
+    await repairNestedSkills(cwd, submodulePath, config)
+    return
+  }
+
+  if (!fs.existsSync(path.resolve(cwd, submodulePath, SKILL_NAME))) {
+    console.error(
+      chalk.red(
+        `\n❌ "${submodulePath}" is empty — the submodule is not cloned.\n`
+      )
+    )
+    console.error(
+      chalk.yellow(`Run \`git submodule update --init --recursive\` first.\n`)
+    )
+    process.exit(1)
+  }
+
+  await reportLinks(cwd, submodulePath, config)
+  console.log(chalk.cyan('\n✨ Skills are linked.\n'))
 }
 
 export { addSpecs, toTitleCase } from './specs.js'

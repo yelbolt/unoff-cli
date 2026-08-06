@@ -30,3 +30,35 @@ describe('unoff remove worker <name>', () => {
     expect(result.stderr).toContain('Unknown worker')
   })
 })
+
+describe('unoff sync', () => {
+  it('exposes specs and skills as subcommands', () => {
+    const result = runCLI(['sync', '--help'])
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain('specs')
+    expect(result.stdout).toContain('skills')
+  })
+
+  it('takes an optional specs directory', () => {
+    const result = runCLI(['sync', 'specs', '--help'])
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain('[dir]')
+  })
+
+  it('is listed in the top-level help', () => {
+    const result = runCLI(['--help'])
+    expect(result.stdout).toContain('sync')
+  })
+})
+
+describe('unoff specs sync (deprecated)', () => {
+  it('still resolves, so existing scripts keep working', () => {
+    const result = runCLI(['specs', 'sync', '--help'])
+    expect(result.status).toBe(0)
+  })
+
+  it('is hidden from the top-level help', () => {
+    const result = runCLI(['--help'])
+    expect(result.stdout).not.toMatch(/^\s+specs\b/m)
+  })
+})

@@ -26,7 +26,15 @@ import {
   syncSpecs,
   toTitleCase,
 } from './specs.js'
-import { SKILLS_PACKAGE, CLAUDE_MARKETPLACE, CLAUDE_PLUGIN } from './add.js'
+import {
+  SKILLS_PACKAGE,
+  SKILLS_REPO,
+  CLAUDE_MARKETPLACE,
+  CLAUDE_PLUGIN,
+  extractSubmodulePath,
+  linkSkill,
+  skillLinkPaths,
+} from './add.js'
 import {
   FIGMA_TOKEN_VAR,
   PENPOT_CLOUD,
@@ -301,6 +309,35 @@ async function seedStarterSpec(
   return true
 }
 
+async function linkExistingSubmodule(
+  cwd: string,
+  config: UnoffConfig
+): Promise<boolean> {
+  const gitmodulesPath = path.join(cwd, '.gitmodules')
+  if (!fs.existsSync(gitmodulesPath)) return false
+
+  const submodulePath = extractSubmodulePath(
+    await fs.readFile(gitmodulesPath, 'utf-8'),
+    SKILLS_REPO
+  )
+  if (!submodulePath) return false
+  if (!fs.existsSync(path.join(cwd, submodulePath, SKILL_NAME))) return false
+
+  console.log(
+    chalk.cyan(`\n📚 Linking skills from the ${submodulePath}/ submodule...\n`)
+  )
+
+  await pruneSkillsDirs(cwd, config)
+  for (const relative of skillLinkPaths(config)) {
+    const outcome = await linkSkill(cwd, submodulePath, relative)
+    const label =
+      outcome === 'skipped' ? chalk.gray('skipped') : chalk.green(outcome)
+    console.log(`  ${label.padEnd(19)}${chalk.gray(relative + '/')}`)
+  }
+
+  return true
+}
+
 export async function pruneSkillsDirs(
   cwd: string,
   config: Pick<UnoffConfig, 'assistants' | 'skillsPath'>
@@ -334,6 +371,9 @@ async function installSkills(
   cwd: string,
   config: UnoffConfig
 ): Promise<boolean> {
+  const linked = await linkExistingSubmodule(cwd, config)
+  if (linked) return true
+
   console.log(chalk.cyan('\n📚 Installing skills...\n'))
 
   const result = spawnSync(
@@ -423,7 +463,7 @@ function printSummary(config: UnoffConfig, done: string[], skipped: string[]) {
     )
   }
   console.log(
-    `  ${chalk.gray('$')} unoff specs sync     ${chalk.gray('# after editing specs')}`
+    `  ${chalk.gray('$')} unoff sync specs     ${chalk.gray('# after editing specs')}`
   )
   if (config.assistants.includes('claude')) {
     console.log(

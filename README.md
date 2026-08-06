@@ -198,12 +198,25 @@ npm run start:announcements
 
 ### `unoff add skills`
 
-Add the [unoff-skills](https://github.com/yelbolt/unoff-skills) repository as a git submodule. You will be prompted for the destination path. Prefer `unoff ai`, which picks the directory each configured assistant actually reads.
+Add the [unoff-skills](https://github.com/yelbolt/unoff-skills) repository as a git submodule, then link it into the skills directory of every configured assistant.
 
 ```bash
 unoff add skills
 git submodule update --init --recursive
 ```
+
+The submodule lands in `.unoff/skills/` by default — **outside** your skills directories on purpose. The repo root holds a `unoff-create-plugin/` folder, so cloning it straight into `.claude/skills/unoff-create-plugin/` would bury `SKILL.md` one level too deep and no assistant would ever load it. Instead each skills directory gets a symlink to the skill itself:
+
+```
+.unoff/skills/                                        # submodule (whole repo)
+  unoff-create-plugin/SKILL.md
+.claude/skills/unoff-create-plugin  ->  ../../.unoff/skills/unoff-create-plugin
+.agents/skills/unoff-create-plugin  ->  ../../.unoff/skills/unoff-create-plugin
+```
+
+One source of truth: `git submodule update --remote` refreshes every assistant at once. On platforms that refuse symlinks the CLI falls back to a copy. Run [`unoff sync skills`](#unoff-sync-skills) after changing which assistants the project targets.
+
+If you already installed the submodule the old way, `unoff add skills` detects it, moves it up a level, and links it back in.
 
 The version is pinned in your project's history — update it deliberately with `git submodule update --remote`.
 
@@ -254,13 +267,13 @@ status: draft
 
 `layers` is the part that matters: it is how an agent goes from _what to build_ to _which architecture docs to read_. A spec declaring `layers: [ui, config]` tells the agent to load `ui/component-patterns.md`, `config/feature-flags.md` and the rest of those layers from the skill library — no guessing.
 
-### `unoff specs sync`
+### `unoff sync specs`
 
 Regenerate `specs/INDEX.md` and point every AI instruction file at it. Run it after adding a spec by hand, or after editing frontmatter.
 
 ```bash
-unoff specs sync          # auto-detects specs/, docs/specs/ or .specs/
-unoff specs sync docs/specs
+unoff sync specs          # auto-detects specs/, docs/specs/ or .specs/
+unoff sync specs docs/specs
 ```
 
 It writes a managed block, delimited by `<!-- unoff:specs:start -->` / `<!-- unoff:specs:end -->`, into the rules file of **each assistant configured in `unoff.config.json`** — see [AI assistants](#ai-assistants) for the mapping. Assistants you did not select are never touched.
@@ -274,6 +287,18 @@ Re-running replaces the block in place — it never duplicates, and everything o
 
 The result is that an agent asked to "add the paywall" reads the spec **and** the matching skill files, instead of one or the other.
 
+> Renamed from `unoff specs sync`. The old form still works and prints a deprecation notice.
+
+### `unoff sync skills`
+
+Re-point every configured skills directory at the [skills submodule](#unoff-add-skills). Run it after changing the assistant list in `unoff.config.json`, or after a fresh clone on a platform where the links did not survive.
+
+```bash
+unoff sync skills
+```
+
+It is idempotent, and it repairs a submodule that was checked out inside a skills directory by moving it up a level first.
+
 ### `unoff remove worker <name>`
 
 Remove a worker submodule and clean up `package.json` (workspaces + scripts).
@@ -284,7 +309,7 @@ unoff remove worker announcement
 
 ### `unoff remove skills`
 
-Remove the skills submodule from the project.
+Remove the skills submodule from the project, along with the links it placed in each assistant's skills directory.
 
 ```bash
 unoff remove skills
@@ -315,7 +340,7 @@ unoff ai          # pick assistants, then install all three
 unoff ai status   # what is configured, what is installed
 ```
 
-Your choice is persisted in `unoff.config.json` and committed, so the whole team targets the same set. Every other command (`add agents`, `specs sync`) reads it. Without a config file, the CLI falls back to detecting which assistants the project already shows traces of.
+Your choice is persisted in `unoff.config.json` and committed, so the whole team targets the same set. Every other command (`add agents`, `sync specs`) reads it. Without a config file, the CLI falls back to detecting which assistants the project already shows traces of.
 
 ### What each assistant gets
 
@@ -362,7 +387,7 @@ Claude users can get skills **and** agents pre-wired as a plugin instead of runn
 /plugin install unoff@yelbolt
 ```
 
-The marketplace is shared with the other yelbolt plugins, so the first command is only needed once. Later releases: `/plugin marketplace update yelbolt`. Specs still come from `unoff add specs` and `unoff specs sync` — they describe your product, not ours.
+The marketplace is shared with the other yelbolt plugins, so the first command is only needed once. Later releases: `/plugin marketplace update yelbolt`. Specs still come from `unoff add specs` and `unoff sync specs` — they describe your product, not ours.
 
 ## Features
 
@@ -378,7 +403,7 @@ The marketplace is shared with the other yelbolt plugins, so the first command i
 - 📢 Announcement & onboarding system (Notion + Cloudflare Workers)
 - ⚙️ Worker management via git submodules (`add worker` / `remove worker`)
 - 📚 Skills library via git submodule (`add skills` / `remove skills`) or [skills.sh](https://skills.sh)
-- 📐 Functional specs discoverable by any LLM (`add specs` / `specs sync`) — layer-routed to the implementation skills
+- 📐 Functional specs discoverable by any LLM (`add specs` / `sync specs`) — layer-routed to the implementation skills
 - 🤖 Claude Code plugin with 5 layer-specialized agents (`yelbolt/claude-marketplace`)
 - 📝 Project specs scaffolding (`add specs` / `remove specs`)
 - 📚 Comprehensive AI-assistant documentation

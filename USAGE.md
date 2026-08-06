@@ -268,13 +268,13 @@ discover on their own:
 
 ```bash
 unoff add specs      # scaffold a spec, declaring the layers it touches
-unoff specs sync     # rebuild specs/INDEX.md + point every agent file at it
+unoff sync specs     # rebuild specs/INDEX.md + point every agent file at it
 ```
 
 Each spec declares `layers:` in its frontmatter (`canvas`, `bridge`, `ui`,
 `config`, `externals`). `specs/INDEX.md` maps those layers to the matching skill
 files, so an agent reading a spec knows exactly which architecture docs to load
-with it. `specs sync` writes a managed block into the rules file of each configured
+with it. `sync specs` writes a managed block into the rules file of each configured
 assistant — replacing it in place on every run, never touching the others.
 
 Everything outside the `<!-- unoff:specs:start -->` markers is preserved. If the
@@ -289,6 +289,8 @@ If you want the documentation without the agents — for another assistant, or p
 unoff add skills                      # git submodule, version pinned in your history
 npx skills add yelbolt/unoff-skills   # copied files, installs into any detected agent
 ```
+
+`unoff add skills` checks the submodule out into `.unoff/skills/` and links the skill into each assistant's skills directory (`.claude/skills/unoff-create-plugin`, `.agents/skills/unoff-create-plugin`, …). The submodule stays outside those directories because the repo root already contains a `unoff-create-plugin/` folder — cloning it in place would leave `SKILL.md` a level too deep for any assistant to find. Re-link with `unoff sync skills` whenever you change the assistant list.
 
 Skip both if you installed the Claude Code plugin: it already ships the same library.
 
