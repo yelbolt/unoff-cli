@@ -3,6 +3,7 @@ import {
   WORKERS,
   WORKER_SCRIPTS,
   SKILLS_REPO,
+  SKILLS_SUBMODULE_PATH,
   SKILLS_PACKAGE,
   CLAUDE_MARKETPLACE,
   CLAUDE_PLUGIN,
@@ -88,6 +89,14 @@ export function showHelp() {
   console.log(chalk.gray(`  ${''.padEnd(36)}Repo: ${SKILLS_REPO}`))
   console.log(
     chalk.gray(
+      `  ${''.padEnd(36)}Lands in ${SKILLS_SUBMODULE_PATH}/, linked into each`
+    )
+  )
+  console.log(
+    chalk.gray(`  ${''.padEnd(36)}assistant skills folder so SKILL.md is found`)
+  )
+  console.log(
+    chalk.gray(
       `  ${''.padEnd(36)}Or copy them: npx skills add ${SKILLS_PACKAGE}`
     )
   )
@@ -114,12 +123,18 @@ export function showHelp() {
   console.log(row('ai status', 'Show what is configured and installed'))
   console.log()
 
-  console.log(chalk.dim('  — Specs'))
+  console.log(chalk.dim('  — Sync'))
   console.log(
-    row('specs sync [dir]', 'Rebuild the specs index + agent pointers')
+    row('sync specs [dir]', 'Rebuild the specs index + agent pointers')
   )
   console.log(
     chalk.gray(`  ${''.padEnd(36)}Writes to your configured assistants only`)
+  )
+  console.log(
+    row('sync skills', 'Re-link the skills submodule into each assistant')
+  )
+  console.log(
+    chalk.gray(`  ${''.padEnd(36)}Run it after changing your assistant list`)
   )
   console.log()
 
@@ -210,7 +225,8 @@ export function showHelp() {
   console.log(`  ${chalk.gray('$')} unoff add rules --force`)
   console.log(`  ${chalk.gray('$')} unoff add agents`)
   console.log(`  ${chalk.gray('$')} unoff add specs`)
-  console.log(`  ${chalk.gray('$')} unoff specs sync`)
+  console.log(`  ${chalk.gray('$')} unoff sync specs`)
+  console.log(`  ${chalk.gray('$')} unoff sync skills`)
   console.log(`  ${chalk.gray('$')} unoff remove worker cors`)
   console.log(`  ${chalk.gray('$')} unoff remove skills`)
   console.log(`  ${chalk.gray('$')} unoff remove specs`)

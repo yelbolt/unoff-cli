@@ -4,7 +4,7 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import { createPlugin } from './commands/create.js'
 import { runScript } from './commands/run.js'
-import { addWorker, addSkills } from './commands/add.js'
+import { addWorker, addSkills, syncSkills } from './commands/add.js'
 import { addSpecs, syncSpecs } from './commands/specs.js'
 import { addAgents } from './commands/agents.js'
 import { addRules } from './commands/rules.js'
@@ -195,17 +195,53 @@ addCmd
     }
   })
 
-const specsCmd = program
-  .command('specs')
-  .description('Manage functional specs and their agent discovery')
-
-specsCmd
+const syncCmd = program
   .command('sync')
+  .description('Refresh what your assistants read — specs index, skills links')
+
+syncCmd
+  .command('specs')
   .description(
     'Regenerate the specs index and point AI instruction files at it'
   )
   .argument('[dir]', 'Specs folder (auto-detected if omitted)')
   .action(async (dir?: string) => {
+    try {
+      await syncSpecs(dir)
+    } catch (error) {
+      console.error(chalk.red('\n❌ Error syncing specs:'), error)
+      process.exit(1)
+    }
+  })
+
+syncCmd
+  .command('skills')
+  .description(
+    'Re-link the skills submodule into every assistant skills folder'
+  )
+  .action(async () => {
+    try {
+      await syncSkills()
+    } catch (error) {
+      console.error(chalk.red('\n❌ Error syncing skills:'), error)
+      process.exit(1)
+    }
+  })
+
+const specsCmd = program
+  .command('specs', { hidden: true })
+  .description('Deprecated — use `unoff sync specs`')
+
+specsCmd
+  .command('sync')
+  .description('Deprecated — use `unoff sync specs`')
+  .argument('[dir]', 'Specs folder (auto-detected if omitted)')
+  .action(async (dir?: string) => {
+    console.warn(
+      chalk.yellow(
+        '\n⚠️  `unoff specs sync` is deprecated — use `unoff sync specs`.'
+      )
+    )
     try {
       await syncSpecs(dir)
     } catch (error) {
@@ -263,7 +299,6 @@ program
 
 program.parse(process.argv)
 
-// Show help if no command is provided
 if (!process.argv.slice(2).length) {
   showHelp()
 }

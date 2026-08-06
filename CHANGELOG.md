@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-08-06
+
+### Fixed
+
+- **`unoff add skills` produced a skill no assistant could load.** The submodule was checked out into `.claude/skills/unoff-create-plugin/`, but the unoff-skills repo root already contains a `unoff-create-plugin/` folder — so `SKILL.md` landed at `.claude/skills/unoff-create-plugin/unoff-create-plugin/SKILL.md`, one level below where Claude, Codex and Windsurf look. The skill was silently invisible
+  - The submodule now goes to `.unoff/skills/` (outside every skills directory), and the skill itself is symlinked into each configured assistant's skills directory — so `SKILL.md` sits exactly where each one expects it. One source of truth: `git submodule update --remote` refreshes them all at once, with a copy fallback where symlinks are unavailable
+  - Running `unoff add skills` on a project installed the old way detects the nested checkout, moves it up a level with `git mv`, and re-links it
+  - Choosing a destination path that would nest again is rejected with an explanation instead of silently producing a dead skill
+  - `unoff remove skills` cleans up the links it created, and never touches a real directory it did not place
+  - `unoff ai` now re-links an existing skills submodule instead of overwriting it with a fresh copy
+
+### Added
+
+- **`unoff sync skills`** — re-point every configured skills directory at the submodule. Run it after changing the assistant list in `unoff.config.json`, or after a clone where the links did not survive. Idempotent, and it repairs a nested checkout on the way
+
+### Changed
+
+- **`unoff specs sync` is now `unoff sync specs`**, alongside `unoff sync skills` under a single `sync` command. The old form still works and prints a deprecation notice
+
 ## [0.4.1] - 2026-08-03
 
 ### Added
@@ -238,6 +257,9 @@ Both templates now ship with an expanded example surface to better illustrate wh
 - 🚧 Sketch plugin template (coming soon)
 - 🚧 Framer plugin template (coming soon)
 
+[0.4.2]: https://github.com/yelbolt/unoff-cli/compare/v0.4.1...v0.4.2
+[0.4.1]: https://github.com/yelbolt/unoff-cli/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/yelbolt/unoff-cli/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/yelbolt/unoff-cli/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/yelbolt/unoff-cli/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/yelbolt/unoff-cli/compare/v0.2.0...v0.2.1

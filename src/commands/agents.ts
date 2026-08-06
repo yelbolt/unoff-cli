@@ -239,7 +239,7 @@ export async function addAgents(config?: UnoffConfig, cwdArg?: string) {
 
   console.log(
     chalk.cyan(
-      '\n💡 Run `unoff specs sync` to wire the roles into rules files.\n'
+      '\n💡 Run `unoff sync specs` to wire the roles into rules files.\n'
     )
   )
 

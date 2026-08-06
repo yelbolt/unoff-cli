@@ -4,7 +4,15 @@ import fs from 'fs-extra'
 import chalk from 'chalk'
 import ora from 'ora'
 import inquirer from 'inquirer'
-import { WORKERS, WORKER_SCRIPTS, SKILLS_REPO } from './add.js'
+import {
+  WORKERS,
+  WORKER_SCRIPTS,
+  SKILLS_REPO,
+  extractSubmodulePath,
+  skillLinkPaths,
+  unlinkSkills,
+} from './add.js'
+import { resolveConfig } from './config.js'
 
 const VALID_WORKERS = Object.keys(WORKERS)
 
@@ -155,20 +163,6 @@ export async function removeWorker(workerName: string) {
   console.log(chalk.cyan('\n✨ Done!\n'))
 }
 
-function extractSubmodulePath(
-  gitmodulesContent: string,
-  repoUrl: string
-): string | null {
-  // Parse .gitmodules to find the path for a given URL
-  const blocks = gitmodulesContent.split(/\[submodule\s+/)
-  for (const block of blocks) {
-    if (!block.includes(repoUrl)) continue
-    const pathMatch = block.match(/^\s*path\s*=\s*(.+)$/m)
-    if (pathMatch) return pathMatch[1].trim()
-  }
-  return null
-}
-
 export async function removeSkills() {
   // Check if we're inside a git repository
   let cwd: string
@@ -248,9 +242,21 @@ export async function removeSkills() {
     await fs.remove(gitModulesDir)
   }
 
+  const { config } = await resolveConfig(cwd)
+  const unlinked = await unlinkSkills(cwd, skillLinkPaths(config))
+
   spinner.succeed(
     chalk.green(`Skills submodule removed from ${chalk.white(submodulePath)}`)
   )
+
+  if (unlinked.length) {
+    console.log()
+    for (const relative of unlinked) {
+      console.log(
+        `  ${chalk.green('unlinked'.padEnd(18))}${chalk.gray(relative + '/')}`
+      )
+    }
+  }
 
   console.log(chalk.cyan('\n✨ Done!\n'))
 }
