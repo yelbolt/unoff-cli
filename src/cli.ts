@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createRequire } from 'module'
 import { Command } from 'commander'
 import chalk from 'chalk'
 import { createPlugin } from './commands/create.js'
@@ -12,6 +13,10 @@ import { configureAi, showAiStatus } from './commands/ai.js'
 import { removeWorker, removeSkills, removeSpecs } from './commands/remove.js'
 import { showHelp } from './commands/help.js'
 
+const { version } = createRequire(import.meta.url)('../package.json') as {
+  version: string
+}
+
 const program = new Command()
 
 program
@@ -19,7 +24,7 @@ program
   .description(
     'CLI tool to create plugins for Figma, Penpot, Sketch, and Framer'
   )
-  .version('0.2.0')
+  .version(version)
 
 program
   .command('create <platform>')
