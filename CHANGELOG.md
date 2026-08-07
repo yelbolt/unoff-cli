@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3] - 2026-08-07
+
+### Changed
+
+- **Skills are free — both plugin templates now say so.** The welcome screen sold a subscription: a lone `unoff add skills` command, a "Subscribe to unlock a growing library of skills" message and a "Get skills access" button pointing at the store. All of it is gone
+- **The welcome screen onboards specs and AI instead.** It is now a three-step `Section` — `unoff ai`, `unoff add specs`, `unoff sync specs` — each with its own explanation and command. The spec step is the one deliberately foregrounded ("This is the one that matters"), since the skills already describe *how* the template is built and only a spec describes *what* you are building
+- The welcome message now separates what is free from what is not: the documentation is free and open to everyone, while guidance tailored to your own plugin — monitoring, analytics, licensing — is presented as something to unlock. The two CTAs point at `documentationUrl` and `storeUrl`
+- Template `README.md` gained a **Building with AI** section: the three commands, how a spec's `layers` route an assistant to the right skill files, and both links
+- Template `ARCHITECTURE.md` was rewritten where it had drifted since 0.4.1. It pointed at `.claude/skills/unoff-create-plugin/README.md` and documented `.cursor/rules/`, `.windsurf/`, `.claude/settings.json` and `.vscode/mcp.json` — none of which templates ship any more
+  - The five layers are now a table of skill files with relative paths, instead of links hardcoded to `.claude/`
+  - A new **Specs — what your plugin does** section sits right after the layer table
+  - The AI tooling table lists what the CLI generates per assistant, not what the template ships
+  - The directory tree shows `specs/`, `.unoff/skills/` and `unoff.config.json`, and drops the skills tree it no longer contains
+  - **Adding a New Feature** starts with writing and syncing the spec, before the implementation steps
+
+### Fixed
+
+- `unoff --version` reported `0.2.0`. It was hardcoded in `cli.ts` and had not moved in five releases — it now reads `package.json`, so it cannot drift again
+- The Penpot template welcomed users to "a production-ready template for building **Figma** plugins", in both English and French
+- Removed the dead `template.skills` translation block from both templates — four keys no component had read since the welcome rework, including a "Get skills access" label
+
 ## [0.4.2] - 2026-08-06
 
 ### Fixed
