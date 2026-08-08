@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.4] - 2026-08-08
+
+### Changed
+
+- **`unoff add specs` no longer asks which layers and platforms a spec touches.** Both questions came before the spec was written, and answering them meant knowing the architecture (`canvas`, `bridge`, `ui`, `config`, `externals`) to describe a product behaviour — backwards for anyone new, and guesswork at that point for everyone else. The command now asks only for the folder and a name
+  - The frontmatter ships with `layers: []` and `platforms: []`, which already read as "all" everywhere they are consumed. The cost is context, never a wrong route
+  - Two comment lines above each field list the valid values and say that empty means all, so narrowing it later is discoverable from inside the file — by you or by your assistant, once the spec actually says something
+  - The starter spec seeded by `unoff ai` matches, instead of guessing `layers: [ui]`
+
 ## [0.4.3] - 2026-08-07
 
 ### Changed

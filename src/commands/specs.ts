@@ -69,13 +69,16 @@ export function toTitleCase(str: string): string {
 export const SPEC_TEMPLATE = (opts: {
   name: string
   title: string
-  layers: Layer[]
-  platforms: Platform[]
+  layers?: Layer[]
+  platforms?: Platform[]
 }) => `---
 name: ${opts.name}
 description: Functional spec — what this feature does and the rules it must respect. Use when implementing or changing ${opts.title}.
-layers: [${opts.layers.join(', ')}]
-platforms: [${opts.platforms.join(', ')}]
+# Which parts of the plugin this touches: ${LAYERS.join(', ')}.
+# Narrows the skill files your assistant reads. Empty means all of them.
+layers: [${(opts.layers ?? []).join(', ')}]
+# Which platforms this targets: ${PLATFORMS.join(', ')}. Empty means all.
+platforms: [${(opts.platforms ?? []).join(', ')}]
 status: draft
 ---
 
@@ -225,6 +228,10 @@ ${rows}
 ${LAYERS.map((l) => `| \`${l}\` | ${LAYER_SKILLS[l].map((f) => `\`${f}\``).join(', ')} |`).join('\n')}
 
 \`<platform>\` resolves to \`figma\` or \`penpot\` depending on the target.
+
+A spec showing \`—\` declares no layer: it is not scoped yet, so read whichever
+layers the task actually touches. Narrowing \`layers:\` in its frontmatter is a
+welcome edit once the spec makes the answer obvious.
 
 4. Implement the spec's **what** using the skills' **how**. When the two
    conflict, the skills win on architecture and conventions; the spec wins on
@@ -447,26 +454,6 @@ export async function addSpecs() {
     process.exit(1)
   }
 
-  const { layers } = await inquirer.prompt([
-    {
-      type: 'checkbox',
-      name: 'layers',
-      message: 'Which layers does this spec touch? (routes agents to skills)',
-      choices: LAYERS.map((l) => ({ name: l, value: l })),
-      default: ['ui'],
-    },
-  ])
-
-  const { platforms } = await inquirer.prompt([
-    {
-      type: 'checkbox',
-      name: 'platforms',
-      message: 'Which platforms?',
-      choices: PLATFORMS.map((p) => ({ name: p, value: p })),
-      default: [...PLATFORMS],
-    },
-  ])
-
   const spinner = ora('Creating spec...').start()
 
   await fs.ensureDir(specsPath)
@@ -475,8 +462,6 @@ export async function addSpecs() {
     SPEC_TEMPLATE({
       name: specName,
       title: toTitleCase(specName),
-      layers: layers as Layer[],
-      platforms: platforms as Platform[],
     })
   )
 
@@ -491,6 +476,13 @@ export async function addSpecs() {
     chalk.white(`  1. Fill in ${path.join(specsDir, `${specName}.md`)}`)
   )
   console.log(chalk.white(`  2. unoff sync specs`))
+  console.log(
+    chalk.gray(
+      `\n  Describe what the feature does — your assistant reads every skill\n` +
+        `  by default. Narrow it later by listing layers in the frontmatter\n` +
+        `  (${LAYERS.join(', ')}); the file explains how.`
+    )
+  )
   console.log(
     chalk.gray(
       `\n  Sync regenerates ${path.join(specsDir, INDEX_FILE)} and points\n` +
