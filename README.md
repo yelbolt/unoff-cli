@@ -232,7 +232,7 @@ Both give you the skill library only. For skills **plus** specs **plus** agents,
 
 ### `unoff add specs`
 
-Scaffold a **functional spec** — what the product does, as opposed to the skills, which describe how it is built. The prompt asks for the folder, the spec name, and the **layers** and **platforms** it touches.
+Scaffold a **functional spec** — what the product does, as opposed to the skills, which describe how it is built. It asks two questions: the folder and the spec name. Nothing else — you should not have to know the architecture before writing down what you want.
 
 ```bash
 unoff add specs
@@ -243,8 +243,11 @@ unoff add specs
 ---
 name: credits-paywall
 description: Functional spec — metered exports with a paywall past the free tier.
-layers: [ui, config, bridge]
-platforms: [figma, penpot]
+# Which parts of the plugin this touches: canvas, bridge, ui, config, externals.
+# Narrows the skill files your assistant reads. Empty means all of them.
+layers: []
+# Which platforms this targets: figma, penpot. Empty means all.
+platforms: []
 status: draft
 ---
 
@@ -265,7 +268,9 @@ status: draft
 ## Implementation notes
 ```
 
-`layers` is the part that matters: it is how an agent goes from _what to build_ to _which architecture docs to read_. A spec declaring `layers: [ui, config]` tells the agent to load `ui/component-patterns.md`, `config/feature-flags.md` and the rest of those layers from the skill library — no guessing.
+`layers` is what takes an agent from _what to build_ to _which architecture docs to read_. A spec declaring `layers: [ui, config]` tells it to load `ui/component-patterns.md`, `config/feature-flags.md` and the rest of those layers from the skill library — no guessing.
+
+It ships **empty**, which reads as "all of them": a working default that costs some context but never routes the agent away from a file it needed. Fill it in when you know — the commented frontmatter says how, and so can your assistant once the spec is written.
 
 ### `unoff sync specs`
 

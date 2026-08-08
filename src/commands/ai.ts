@@ -294,8 +294,6 @@ async function seedStarterSpec(
     SPEC_TEMPLATE({
       name,
       title: toTitleCase(name),
-      layers: ['ui'],
-      platforms: config.platform ? [config.platform] : ['figma', 'penpot'],
     }),
     'utf-8'
   )

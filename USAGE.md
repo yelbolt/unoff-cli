@@ -267,15 +267,18 @@ your** plugin does. `unoff add specs` covers that second half, in a form agents
 discover on their own:
 
 ```bash
-unoff add specs      # scaffold a spec, declaring the layers it touches
+unoff add specs      # scaffold a spec — asks for the folder and a name, nothing more
 unoff sync specs     # rebuild specs/INDEX.md + point every agent file at it
 ```
 
-Each spec declares `layers:` in its frontmatter (`canvas`, `bridge`, `ui`,
+Each spec carries a `layers:` field in its frontmatter (`canvas`, `bridge`, `ui`,
 `config`, `externals`). `specs/INDEX.md` maps those layers to the matching skill
 files, so an agent reading a spec knows exactly which architecture docs to load
-with it. `sync specs` writes a managed block into the rules file of each configured
-assistant — replacing it in place on every run, never touching the others.
+with it. It is scaffolded **empty**, which means "all of them" — you describe the
+feature first and narrow the routing later, rather than having to name layers
+before you have written a line of product. `sync specs` writes a managed block
+into the rules file of each configured assistant — replacing it in place on every
+run, never touching the others.
 
 Everything outside the `<!-- unoff:specs:start -->` markers is preserved. If the
 specs folder is empty, `unoff ai` seeds a starter spec so the index has something

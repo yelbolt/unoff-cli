@@ -59,6 +59,7 @@ async function seedSpecs(files: Record<string, string>) {
 }
 
 beforeEach(async () => {
+  mockPrompt.mockReset()
   tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'unoff-test-'))
   vi.spyOn(process, 'cwd').mockReturnValue(tmpDir)
   vi.spyOn(process, 'exit').mockImplementation((code?: any) => {
@@ -76,8 +77,6 @@ describe('addSpecs()', () => {
     mockPrompt
       .mockResolvedValueOnce({ specsDir: 'specs' })
       .mockResolvedValueOnce({ specName: 'my-feature' })
-      .mockResolvedValueOnce({ layers: ['ui', 'config'] })
-      .mockResolvedValueOnce({ platforms: ['figma'] })
 
     await addSpecs()
 
@@ -87,19 +86,57 @@ describe('addSpecs()', () => {
     const content = await fs.readFile(filePath, 'utf-8')
     expect(content).toContain('name: my-feature')
     expect(content).toContain('description:')
-    expect(content).toContain('layers: [ui, config]')
-    expect(content).toContain('platforms: [figma]')
+    expect(content).toContain('layers: []')
+    expect(content).toContain('platforms: []')
     expect(content).toContain('# My Feature')
     expect(content).toContain('## Acceptance criteria')
     expect(content).toContain('## Out of scope')
+  })
+
+  it('asks only for the folder and the name — no architecture questions', async () => {
+    mockPrompt
+      .mockResolvedValueOnce({ specsDir: 'specs' })
+      .mockResolvedValueOnce({ specName: 'my-feature' })
+
+    await addSpecs()
+
+    expect(mockPrompt).toHaveBeenCalledTimes(2)
+  })
+
+  it('explains in the file how to narrow the empty routing fields', async () => {
+    mockPrompt
+      .mockResolvedValueOnce({ specsDir: 'specs' })
+      .mockResolvedValueOnce({ specName: 'my-feature' })
+
+    await addSpecs()
+
+    const content = await fs.readFile(
+      path.join(tmpDir, 'specs', 'my-feature.md'),
+      'utf-8'
+    )
+    for (const layer of LAYERS) expect(content).toContain(layer)
+    expect(content).toMatch(/#.*Empty means all/i)
+  })
+
+  it('leaves empty routing fields parseable, and they mean "everything"', async () => {
+    mockPrompt
+      .mockResolvedValueOnce({ specsDir: 'specs' })
+      .mockResolvedValueOnce({ specName: 'my-feature' })
+
+    await addSpecs()
+
+    const specs = await readSpecs(path.join(tmpDir, 'specs'))
+    expect(specs).toHaveLength(1)
+    expect(specs[0].layers).toEqual([])
+    expect(specs[0].platforms).toEqual([])
+    expect(specs[0].name).toBe('my-feature')
+    expect(specs[0].status).toBe('draft')
   })
 
   it('creates nested folder if it does not exist', async () => {
     mockPrompt
       .mockResolvedValueOnce({ specsDir: 'deep/nested/specs' })
       .mockResolvedValueOnce({ specName: 'test-spec' })
-      .mockResolvedValueOnce({ layers: ['ui'] })
-      .mockResolvedValueOnce({ platforms: ['figma', 'penpot'] })
 
     await addSpecs()
 
