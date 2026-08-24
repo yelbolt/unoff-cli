@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.5] - 2026-08-25
+
+### Changed
+
+- `@unoff/ui` bumped to **1.25.1** in both Figma and Penpot templates
+- Both templates dropped the `npm:@preact/compat` aliases for `react` and `react-dom` — `preact` is now the only dependency left in that family, since every import in both templates already resolved to it directly
+- Both templates now import `commons` alongside their platform's theme tokens (`figmaPlugin` / `figmaTypes` for Figma, `penpotColors` / `penpotTypes` for Penpot) from `@unoff/ui` in `src/app/index.tsx`, registering the new theme package before render
+- Both templates: the "update consent" shortcut is now gated behind the `AUTHENTICATION` feature flag (`isActive` / `isBlocked`) and `isSupabaseEnabled`, instead of always showing regardless of whether authentication is configured
+
 ## [0.4.4] - 2026-08-08
 
 ### Changed
@@ -287,6 +296,9 @@ Both templates now ship with an expanded example surface to better illustrate wh
 - 🚧 Sketch plugin template (coming soon)
 - 🚧 Framer plugin template (coming soon)
 
+[0.4.5]: https://github.com/yelbolt/unoff-cli/compare/v0.4.4...v0.4.5
+[0.4.4]: https://github.com/yelbolt/unoff-cli/compare/v0.4.3...v0.4.4
+[0.4.3]: https://github.com/yelbolt/unoff-cli/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/yelbolt/unoff-cli/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/yelbolt/unoff-cli/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/yelbolt/unoff-cli/compare/v0.3.0...v0.4.0
