@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.6] - 2026-09-01
+
+### Changed
+
+- `@unoff/ui` bumped to **1.25.2** in both Figma and Penpot templates
+- Feature-flag lookups across both templates now go through a private `features` getter instead of re-invoking `Component.features(planStatus, config, service, editor)` inline at every use site — collapses that repeated four-argument call down to `this.features` in `LangPreferences`, `PlanControls`, `Shortcuts`, and the `About`, `Announcements`, `Chat`, `Feedback`, `License`, `NotificationBanner`, `Onboarding`, `Preferences`, `Pricing`, `Report`, `TryPro` and `WelcomeToPro`/`WelcomeToTrial` modals
+- Removed the unused `USER_LICENSE_JUMP` feature flag from both templates — dropped from `features.ts` and from the `Shortcuts` feature map, since no menu item ever activated it
+- Both templates now set `document.documentElement`'s `lang` attribute from the resolved user language, on initial load and again after a language change, instead of leaving it at whatever the document shipped with
+- `Shortcuts`: the language and user menus gained `isAlwaysExpanded`, so they no longer collapse into an overflow state
+- `Shortcuts`: the Help and Involve menu separators now carry their own `isActive`, derived from whether any item in their section is active, instead of always rendering even when every surrounding item was hidden
+
+### Fixed
+
+- Penpot template: `platformUrl` was hardcoded to `https://www.penpot.com` in `global.config.ts`, which broke plugin-to-host messaging against self-hosted Penpot instances — it is now `'*'`
+
 ## [0.4.5] - 2026-08-25
 
 ### Changed
@@ -296,6 +311,7 @@ Both templates now ship with an expanded example surface to better illustrate wh
 - 🚧 Sketch plugin template (coming soon)
 - 🚧 Framer plugin template (coming soon)
 
+[0.4.6]: https://github.com/yelbolt/unoff-cli/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/yelbolt/unoff-cli/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/yelbolt/unoff-cli/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/yelbolt/unoff-cli/compare/v0.4.2...v0.4.3
