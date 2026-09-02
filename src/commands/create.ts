@@ -228,6 +228,16 @@ export async function createPlugin(platform: string) {
       },
     })
 
+    // Restore .gitignore: npm strips any file literally named .gitignore
+    // from published tarballs, so the template ships it as "gitignore".
+    const templateGitignorePath = path.join(outputDir, 'gitignore')
+    if (await fs.pathExists(templateGitignorePath)) {
+      await fs.rename(
+        templateGitignorePath,
+        path.join(outputDir, '.gitignore')
+      )
+    }
+
     // Process all files with Mustache templating
     await processDirectory(outputDir, templateData)
 
